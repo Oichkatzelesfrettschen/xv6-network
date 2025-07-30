@@ -25,3 +25,6 @@
 data:
   .word 1
 
+# Mark this object file as not requiring an executable stack.
+.section .note.GNU-stack,"",@progbits
+

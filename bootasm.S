@@ -87,3 +87,6 @@ gdt:
 gdtdesc:
   .word   (gdtdesc - gdt - 1)             # sizeof(gdt) - 1
   .long   gdt                             # address gdt
+
+# Mark this object file as not requiring an executable stack.
+.section .note.GNU-stack,"",@progbits

@@ -28,3 +28,6 @@ argv:
   .long init
   .long 0
 
+# Mark this object file as not requiring an executable stack.
+.section .note.GNU-stack,"",@progbits
+

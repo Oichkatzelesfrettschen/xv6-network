@@ -26,3 +26,6 @@ swtch:
   popl %ebx
   popl %ebp
   ret
+
+# Mark this object file as not requiring an executable stack.
+.section .note.GNU-stack,"",@progbits

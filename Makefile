@@ -76,9 +76,15 @@ OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
+# Ensure all assembly sources emit the .note.GNU-stack section
+CFLAGS += -Wa,--noexecstack
 ASFLAGS = -m32 -gdwarf-2
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null)
+# Produce binaries that do not require an executable stack
+LDFLAGS += -z noexecstack
+# Silence linker warnings about RWX segments produced when using -N
+LDFLAGS += --no-warn-rwx-segments
 
 .PHONY: all
 all: xv6.img fs.img
