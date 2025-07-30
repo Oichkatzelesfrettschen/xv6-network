@@ -31,3 +31,6 @@ SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(ioctl)
 
+# Mark this object file as not requiring an executable stack.
+.section .note.GNU-stack,"",@progbits
+

@@ -39,5 +39,9 @@ initcode.out
 tags
 cscope.*
 *.pyc
+# Build directories
+build*/
+builds/
+*/CMakeFiles/
 
 

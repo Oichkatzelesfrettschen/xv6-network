@@ -73,3 +73,6 @@ gdtdesc:
   .long   gdt                             # address gdt
 
 .comm stack, STACK
+
+# Mark this object file as not requiring an executable stack.
+.section .note.GNU-stack,"",@progbits
