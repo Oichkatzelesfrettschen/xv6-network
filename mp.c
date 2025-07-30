@@ -59,6 +59,8 @@ mpsearch(void)
   struct mp *mp;
 
   bda = (uchar*)0x400;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
   if((p = ((bda[0x0F]<<8)|bda[0x0E]) << 4)){
     if((mp = mpsearch1((uchar*)p, 1024)))
       return mp;
@@ -67,6 +69,7 @@ mpsearch(void)
     if((mp = mpsearch1((uchar*)p-1024, 1024)))
       return mp;
   }
+#pragma GCC diagnostic pop
   return mpsearch1((uchar*)0xF0000, 0x10000);
 }
 
