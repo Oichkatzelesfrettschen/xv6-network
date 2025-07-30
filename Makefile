@@ -52,7 +52,7 @@ TOOLPREFIX := $(shell if i386-jos-elf-objdump -i 2>&1 | grep '^elf32-i386$$' >/d
 endif
 
 # If the makefile can't find QEMU, specify its path here
-#QEMU = 
+QEMU = qemu-system-i386
 QEMU_WIN = "C:/Home/ProgramFiles/qemu/qemu.exe"
 
 # Try to infer the correct QEMU
@@ -153,7 +153,7 @@ _forktest: forktest.o $(ULIB)
 	$(OBJDUMP) -S _forktest > forktest.asm
 
 mkfs: mkfs.c fs.h
-	gcc -m32 -Werror -Wall -o mkfs mkfs.c
+	gcc -Werror -Wall -O2 -o mkfs mkfs.c
 
 UPROGS=\
 	_cat\
