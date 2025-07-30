@@ -79,6 +79,7 @@ CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 &
 ASFLAGS = -m32 -gdwarf-2
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null)
+LDFLAGS += -z noexecstack --no-warn-rwx-segments
 
 .PHONY: all
 all: xv6.img fs.img

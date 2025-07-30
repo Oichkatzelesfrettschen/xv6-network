@@ -73,3 +73,6 @@ gdtdesc:
   .long   gdt                             # address gdt
 
 .comm stack, STACK
+
+# Mark the stack as non-executable
+.section .note.GNU-stack,"",@progbits

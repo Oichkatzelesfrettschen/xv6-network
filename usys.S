@@ -31,3 +31,6 @@ SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(ioctl)
 
+# Mark the stack as non-executable
+.section .note.GNU-stack,"",@progbits
+

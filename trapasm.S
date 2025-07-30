@@ -35,3 +35,6 @@ trapret:
   popl %ds
   addl $0x8, %esp  # trapno and errcode
   iret
+
+# Mark the stack as non-executable
+.section .note.GNU-stack,"",@progbits

@@ -74,3 +74,6 @@ gdt:
 gdtdesc:
   .word   (gdtdesc - gdt - 1)
   .long   gdt
+
+# Mark the stack as non-executable
+.section .note.GNU-stack,"",@progbits

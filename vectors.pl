@@ -26,6 +26,9 @@ for(my $i = 0; $i < 256; $i++){
     print "  .long vector$i\n";
 }
 
+# Ensure a non-executable stack by emitting the GNU-stack note
+print ".section .note.GNU-stack,\"\",\@progbits\n";
+
 # sample output:
 #   # handlers
 #   .globl alltraps

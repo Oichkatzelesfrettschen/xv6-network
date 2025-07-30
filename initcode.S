@@ -28,3 +28,6 @@ argv:
   .long init
   .long 0
 
+# Mark the stack as non-executable
+.section .note.GNU-stack,"",@progbits
+

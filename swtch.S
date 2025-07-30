@@ -26,3 +26,6 @@ swtch:
   popl %ebx
   popl %ebp
   ret
+
+# Mark the stack as non-executable
+.section .note.GNU-stack,"",@progbits
