@@ -5,7 +5,7 @@ h2. Abstruct
 
 This project will be the implementation of a network in xv6. Supported NIC will be NE2000. This implement referes to MINIX.
 
-These source codes are licenced under the BSD license, which is the same as the licenses of xv6 and MINIX.
+These source codes are licensed under the MIT License. See the LICENSE file for details.
 
 h2. Change Log
 
