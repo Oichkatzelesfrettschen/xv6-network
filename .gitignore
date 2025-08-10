@@ -39,6 +39,7 @@ initcode.out
 tags
 cscope.*
 *.pyc
+*.tar.gz
 # Build directories
 build*/
 builds/
