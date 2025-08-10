@@ -57,6 +57,30 @@ h3. 20110919
 * I implement 'ioctl' system call.
 
 
+h2. Network Usage
+
+To build xv6 with network support, simply invoke the usual build followed by a simulator target:
+
+<pre>
+$ make
+$ make qemu    # or 'make bochs'
+</pre>
+
+The Makefile supplies QEMU with an @ne2k_pci@ NIC and the default MAC address @52:54:00:12:34:56@.  This device triggers interrupts on IRQ 11 in QEMU 0.14 and later (*see Change Log 20110919*).  When using Bochs, enable a NE2000 adapter in @.bochsrc@ and set @irq=10@ to avoid conflicts (*see Change Log 20110915*).  The same default MAC address applies to both simulators (*see Change Log 20110908*).
+
+After booting xv6, exercise the driver with the built-in @ethtest@ program to issue DHCP requests:
+
+<pre>
+$ ethtest    # inside xv6
+</pre>
+
+Monitor host-side traffic with tools such as @tcpdump@:
+
+<pre>
+$ sudo tcpdump -n -i <tap-interface>
+</pre>
+
+
 h2. Original README
 
 <pre>
