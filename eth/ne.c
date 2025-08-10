@@ -4,10 +4,10 @@
 #include "../net/net.h"
 #include "ne.h"
 
-// ※コメントの[数値(キーワード)]はDP8390仕様書のページ番号
-// DP8390 Documents: http://www.national.com/ds/DP/DP8390D.pdf
+// Comments containing [page numbers] refer to sections in the DP8390 specification.
+// DP8390 Datasheet: http://www.national.com/ds/DP/DP8390D.pdf
 
-// NICの接続チェックとMACアドレスの取得。
+// Probe the NIC and retrieve its MAC address.
 int
 ne_probe(ne_t* ne)
 {
@@ -19,20 +19,19 @@ ne_probe(ne_t* ne)
   if (reg0 == 0xFF)
     return FALSE;
 
-  // DP8390が存在するかのチェック
+  // Verify that a DP8390 controller is present.
   {
     int regd;
-    // ページ1にしてMAR5を保存してから0xFFを書き込む。
+    // Switch to page 1, save MAR5, then write 0xFF.
     outb(ne->base + DP_CR, CR_STP | CR_NO_DMA | CR_PS_P1);
     regd = inb(ne->base + DP_MAR5);
     outb(ne->base + DP_MAR5, 0xFF);
-    // [17] ページ1のMAR5はページ0のCNTR0に相当する。
+    // [17] On page 1 MAR5 mirrors CNTR0 on page 0.
     outb(ne->base + DP_CR, CR_NO_DMA | CR_PS_P0);
-    // [29] CNTR0レジスタはCRCエラーの時にインクリメントされるカウンタ。
-    // プロセッサに読み出された後にクリアされる仕様。
+    // [29] CNTR0 increments on CRC errors and clears on read.
     inb(ne->base + DP_CNTR0);
     if (inb(ne->base + DP_CNTR0) != 0) {
-      // 違うようなので値を戻しておく。
+      // Unexpected value, restore registers.
       outb(ne->base, reg0);
       outb(ne->base + DP_TCR, regd);
       cprintf("%s: This is not NEx000.\n", ne->name);
@@ -40,99 +39,92 @@ ne_probe(ne_t* ne)
     }
   }
 
-  // ボードのリセット
+  // Reset the board.
   {
     int i = 0;
-    // よく分からないがこれでリセットできるようだ
+    // Toggle the reset port to trigger a hardware reset.
     outb(ne->base + NE_RESET, inb(ne->base + NE_RESET));
-    // リセットのISR(割り込み)をpollingする。
+    // Poll the interrupt status register until reset completes.
     while (inb(ne->base + DP_ISR) == 0) {
-      // 一応終わるようにしておく。
-      // できれば20msなど正確なタイムアウト処理ができるとよいのだが、
-      // xv6では現時点では正確にsleepする処理が作成されていないので適当。
+      // Ensure loop termination; precise 20 ms timeout is ideal but unavailable.
       if (i++ > 10000) {
         cprintf("%s: NIC reset failure\n", ne->name);
         return FALSE;
       }
     }
-    // [20] ISRは各ビットが1の時、割り込み無しと言う意味。
-    // 0のビットがあった場合、CPUに割り込みが発生し、CPUは処理したらフラグを
-    // 立て直すが、まだCPUへの割り込みは無効なので、手動で直しておく。
+    // [20] An ISR bit set to 1 means no interrupt pending.
+    // Clear all bits manually since CPU interrupts are disabled.
     outb(ne->base + DP_ISR, 0xFF);
   }
 
-  // PROMから16バイト(正確には32バイトであるが)読み出す。
-  // そのためには、事前に基本に沿った初期化処理を行っておく必要があるようだ。
-  // (経験の賜なようなので詳細は無視！)
+  // Read 16 bytes from the PROM (32 bytes on the wire) using the standard
+  // initialization sequence described in the datasheet.
   {
     int i;
-    // [27] DMA関連のレジスタには16ビットのものもあるが、
-    // 8ビット幅でアクセスしなければならない(ex: RBCR0, RBCR1)。
-    // [29] seqは概ねリファレンス通りの初期化処理
+    // [27] Some DMA registers are 16-bit but must be accessed byte-wise
+    // (e.g., RBCR0 and RBCR1).
+    // [29] The following sequence follows the reference initialization.
     struct {
       uchar offset, value;
     } seq[] = {
-      // 1. ページ0の書き込みモード。DMAはOFF。NICはオフラインに。
+      // 1. Select page 0 for writing; disable DMA and take the NIC offline.
       { DP_CR, CR_NO_DMA | CR_PS_P0 | CR_STP },
-      // 2. バイト幅でのアクセスで、バーストモード。
+      // 2. Byte-wide burst transfers.
       { DP_DCR, (DCR_BMS | DCR_8BYTES) },
-      // 3. カウントレジスタをクリア
+      // 3. Clear the byte count registers.
       { DP_RBCR0, 0x00 }, { DP_RBCR1, 0x00 },
-      // 4. モニターモード(メモリに書かれない？)
+      // 4. Enable monitor mode (received frames discarded).
       { DP_RCR, RCR_MON },
-      // 5. ループバックモード
+      // 5. Enter internal loopback mode.
       { DP_TCR, TCR_INTERNAL },
-      // (6はいらない？)
-      // 7. ISRの初期化
+      // (6 unused)
+      // 7. Clear interrupt status.
       { DP_ISR, 0xFF },
-      // 8. とりあえず割り込み全無効化
+      // 8. Mask all interrupts.
       { DP_IMR, 0x00 },
-      // (9はいらない？)
+      // (9 unused)
 
-      // この後PROMの読み出しするので、その旨を設定しておく
-      // 32バイト読み込むぞ
+      // Configure PROM read of 32 bytes starting at address 0x00.
       { DP_RBCR0, 32 }, { DP_RBCR1, 0 },
-      // メモリの0x00から
       { DP_RSAR0, 0x00 }, { DP_RSAR1, 0x00 },
-
-      // 10. ページ0の読み込みモード。NICはオンラインになるが、
-      // ループバックモードなのでlocal receive DMAはまだ動いてない。
+      // 10. Switch to page 0 read mode; NIC is online but receive DMA
+      //     remains halted by loopback.
       { DP_CR, (CR_PS_P0 | CR_DM_RR | CR_STA) },
     };
     for (i = 0; i < NELEM(seq); ++i)
       outb(ne->base + seq[i].offset, seq[i].value);
-    // 8ビットのNIC(NE1000?)かどうかもチェック
+    // Detect whether the NIC is 8-bit (NE1000) or 16-bit (NE2000).
     ne->is16bit = TRUE;
     for (i = 0; i < 32; i += 2) {
       eprom[i+0] = inb(ne->base + NE_DATA);
       eprom[i+1] = inb(ne->base + NE_DATA);
-      // NE2000やそのクローンは奇数偶数同じなようだ。違ったら多分NE1000。
+      // NE2000 clones duplicate each byte; mismatches imply an NE1000.
       if (eprom[i+0] != eprom[i+1])
         ne->is16bit = FALSE;
     }
-    // ノーマライズ
+    // Normalize to 16 bytes when in 16-bit mode.
     if (ne->is16bit)
       for (i = 0; i < 16; ++i)
         eprom[i] = eprom[i*2];
-    // NE2000(NE1000)は14, 15番目が0x57らしい。
+    // Signature bytes 14 and 15 should be 0x57.
     if (eprom[14] != 0x57 || eprom[15] != 0x57)
       return FALSE;
   }
   
-  // MACアドレスの取得
+  // Store the MAC address.
   for (i = 0; i < 6; ++i)
     ne->address[i] = eprom[i];
   
   return TRUE;
 }
 
-// NICの初期化処理
+// Initialize the NIC.
 void
 ne_init(ne_t* ne)
 {
   int i;
 
-  // ページ関連の値の算出
+  // Calculate page layout parameters.
   if (ne->is16bit) {
     ne->ramsize = NE2000_SIZE;
     ne->startaddr = NE2000_START;
@@ -146,7 +138,7 @@ ne_init(ne_t* ne)
   ne->send_stoppage = ne->send_startpage + SENDQ_PAGES * SENDQ_LEN - 1;
   ne->recv_startpage = ne->send_stoppage + 1;
   ne->recv_stoppage = ne->send_startpage + ne->pages;
-  // send queueのための下準備
+  // Initialize send queue bookkeeping.
   for (i = 0; i < SENDQ_LEN; ++i) {
     ne->sendq[i].sendpage = ne->send_startpage + i * SENDQ_PAGES;
     ne->sendq[i].filled = 0;
@@ -154,7 +146,7 @@ ne_init(ne_t* ne)
   ne->sendq_head = 0;
   ne->sendq_tail = SENDQ_LEN-1;
 
-  // ステータスを表示しておく
+  // Display status information.
   cprintf("%s: NE%d000 (%dkB RAM) at 0x%x:%d - ",
          ne->name,
          ne->is16bit ? 2 : 1,
@@ -164,49 +156,48 @@ ne_init(ne_t* ne)
   for (i = 0; i < 6; ++i)
     cprintf("%x%s", ne->address[i], i < 5 ? ":" : "\n");
 
-  // [29] 基本的な初期化処理
+  // [29] Core initialization sequence.
   {
     struct {
       uchar offset, value;
     } seq[] = {
-      // 1. CR
+      // 1. Command Register.
       { DP_CR, CR_PS_P0 | CR_STP | CR_NO_DMA },
-      // 2. DCR. [5(PRQ)] LASが指定されていないので16bitモード。
+      // 2. Data Configuration Register. [5(PRQ)] 16-bit mode when LAS is unset.
       { DP_DCR, ((ne->is16bit ? DCR_WORDWIDE : DCR_BYTEWIDE) |
                  DCR_LTLENDIAN | DCR_8BYTES | DCR_BMS) },
-      // 3. RCR
+      // 3. Receive Configuration Register.
       { DP_RCR, RCR_MON },
-      // 4. RBCR
+      // 4. Clear Remote Byte Count.
       { DP_RBCR0, 0 }, { DP_RBCR1, 0 },
-      // 5. TCR
+      // 5. Transmit Configuration Register.
       { DP_TCR, TCR_INTERNAL },
-      // 6. リングバッファ初期化 [10]参照
+      // 6. Initialize ring buffer [10].
       { DP_PSTART, ne->recv_startpage },
       { DP_PSTOP, ne->recv_stoppage },
-      { DP_BNRY, ne->recv_startpage }, // CURRの1つ前であれば良い
-      // 7. ISR初期化
+      { DP_BNRY, ne->recv_startpage }, // One page behind CURR.
+      // 7. Clear ISR.
       { DP_ISR, 0xFF },
-      // 8. IMR初期化(全割り込みを許容する)
+      // 8. Enable all interrupt masks.
       { DP_IMR, (IMR_PRXE | IMR_PTXE | IMR_RXEE |
                  IMR_TXEE | IMR_OVWE | IMR_CNTE) },
-      // 9. ページ1に移動し、
+      // 9. Switch to page 1.
       { DP_CR, CR_PS_P1 | CR_NO_DMA },
-      // 9. i. PAR0-5を初期化
+      // 9.i Load MAC address into PAR0-5.
       { DP_PAR0, ne->address[0] }, { DP_PAR1, ne->address[1] },
       { DP_PAR2, ne->address[2] }, { DP_PAR3, ne->address[3] },
       { DP_PAR4, ne->address[4] }, { DP_PAR5, ne->address[5] },
-      // 9. ii. MAR0-7を初期化
+      // 9.ii Initialize multicast filter.
       { DP_MAR0, 0xFF }, { DP_MAR1, 0xFF }, { DP_MAR2, 0xFF },
       { DP_MAR3, 0xFF }, { DP_MAR4, 0xFF }, { DP_MAR5, 0xFF },
       { DP_MAR6, 0xFF }, { DP_MAR7, 0xFF },
-      // 9. iii. CURRent pointerを初期化
+      // 9.iii Initialize current page pointer.
       { DP_CURR, ne->recv_startpage + 1 },
-      // 10. NICをスタートモードに(0x22)。まだDMAは動いていない。
+      // 10. Start NIC (0x22); remote DMA remains idle.
       { DP_CR, CR_STA | CR_NO_DMA },
-      // 11. TCRを変更(NIC動作開始？)
+      // 11. Enable transmitter for normal operation.
       { DP_TCR, TCR_NORMAL },
-      // RCRはとりあえずPromiscuous(何でも受け入れ)モードに
-      // (設定できるようにしたほうが良いのか？)
+      // Receiver set to promiscuous mode for now.
       { DP_RCR, RCR_PRO },
     };
     for (i = 0; i < NELEM(seq); ++i)
@@ -216,41 +207,38 @@ ne_init(ne_t* ne)
   return;
 }
 
-// 読み書きする際のリモートDMAのセットアップ
-// mode: CR_DM_R*, addr: ローカルバッファの実アドレス、size: バイト数
+// Configure remote DMA for read or write operations.
+// mode: one of CR_DM_R*, addr: local buffer physical address, size: bytes.
 void
 ne_rdma_setup(ne_t* ne, int mode, ushort addr, int size)
 {
-  // [13-14] Writeの時はPRQ(Port ReQest)を出さなければならない
+  // [13-14] Writes require issuing a Port ReQuest (PRQ).
   if (mode == CR_DM_RW) {
-    // このコードは謎
-    //outb(ne->base + DP_ISR, ISR_RDC);
-    // Dummy DMA Readを行う
+    // Perform a dummy DMA read to trigger PRQ.
     uchar dummy[4];
     ushort safeloc = ne->startaddr - sizeof(dummy);
     int oldcrda, newcrda;
     oldcrda = inb(ne->base + DP_CRDA0);
     oldcrda |= ((inb(ne->base + DP_CRDA1) << 8) & 0xFF00);
     ne_getblock(ne, safeloc, sizeof(dummy), dummy);
-    // required delay(polling)
+    // Poll until the current DMA address changes.
     do {
       newcrda = inb(ne->base + DP_CRDA0);
       newcrda |= ((inb(ne->base + DP_CRDA1) << 8) & 0xFF00);
     } while (oldcrda == newcrda);
   }
-  // リモートDMAでデータポートを介して双方向の転送ができる。
-  // 転送されるごとに、RBCRは減少、RSARは増加する
-  // RBCRが0になったら転送終了。
+  // Remote DMA transfers through the data port; each byte decrements RBCR
+  // and increments RSAR. Transfer ends when RBCR reaches zero.
   outb(ne->base + DP_RSAR0, addr & 0xFF);
   outb(ne->base + DP_RSAR1, (addr >> 8) & 0xFF);
   outb(ne->base + DP_RBCR0, size & 0xFF);
   outb(ne->base + DP_RBCR1, (size >> 8) & 0xFF);
-  // RemoteDMA処理開始
+  // Start the remote DMA operation.
   outb(ne->base + DP_CR, mode | CR_PS_P0 | CR_STA);
   return;
 }
 
-// RAMのaddrからsizeバイトdstに読み込み。
+// Read 'size' bytes from NIC RAM at 'addr' into 'dst'.
 void
 ne_getblock(ne_t* ne, ushort addr, int size, void* dst)
 {
@@ -262,47 +250,46 @@ ne_getblock(ne_t* ne, ushort addr, int size, void* dst)
   return;
 }
 
-// データの転送開始処理
-// ローカルバッファにあるpageページからsizeバイト送信開始
+// Begin transmitting data.
+// Transmits 'size' bytes starting at 'page' in local buffer memory.
 void
 ne_start_xmit(ne_t* ne, int page, int size)
 {
   outb(ne->base + DP_TPSR, page);
   outb(ne->base + DP_TBCR0, size & 0xFF);
   outb(ne->base + DP_TBCR1, (size >> 8) & 0xFF);
-  // [12,19] TXPで転送開始となる。
-  // 転送終了または失敗したら内部的にフラグはリセットされる。
-  // 事前にTBCRとTPSRをセットしておくこと。
-  outb(ne->base + DP_CR, CR_PS_P0 | CR_NO_DMA | CR_STA | CR_TXP); // 転送開始！
+  // [12,19] Asserting TXP starts the transfer; the flag clears on
+  // completion or failure. TBCR and TPSR must be configured first.
+  outb(ne->base + DP_CR, CR_PS_P0 | CR_NO_DMA | CR_STA | CR_TXP); // start!
   return;
 }
 
-// sizeバイトのpacketをローカルバッファに書き込み、その後送信する
-// sizeは適正([46, 1514])であること
+// Write a packet of 'size' bytes into local memory and transmit it.
+// 'size' must be within [46, 1514].
 int
 ne_pio_write(ne_t* ne, uchar* packet, int size)
 {
-  // sendqの先頭がちゃんと空いてる？
+  // Ensure the head of the send queue is available.
   int q = ne->sendq_head % SENDQ_LEN;
   if (ne->sendq[q].filled || ne->sendq_head > ne->sendq_tail) {
     cprintf("%s: all transmitting buffers in NIC are busy.\n", ne->name);
     return 0;
   }
 
-  // 書き込み処理
+  // Copy packet into NIC memory.
   ne_rdma_setup(ne, CR_DM_RW, ne->sendq[q].sendpage * DP_PAGESIZE, size);
   if (ne->is16bit)
     outsw(ne->base + NE_DATA, packet, size);
   else
     outsb(ne->base + NE_DATA, packet, size);
-  // ToDo: ここでISR_RDCのチェックは必要なのか？
+  // TODO: determine whether ISR_RDC needs checking here.
 
   ne->sendq[q].filled = TRUE;
   ne_start_xmit(ne, ne->sendq[q].sendpage, size);
 
-  // ToDo: 多分算術オーバーフロー対策しないといけない。
+  // TODO: handle possible arithmetic overflow.
   ne->sendq_head++;
-  
+
   return size;
 }
 
@@ -313,49 +300,47 @@ typedef struct {
   uchar rbc0, rbc1;       // Receive Byte Count 0 (low)
 } ne_recv_hdr;            // Receive Byte Count 1 (high)
 
-// ローカルバッファのpageからの一連のデータを読み込む。
-// bufsizeはbufサイズ。足りない場合パケットサイズを返す。
-// また、bufがNULLならパケットサイズ。
-// bufがNULLでないなら読み込んだサイズを返す。
-// 0ならパケットなし、-1ならエラー。
+// Read the next packet from the ring buffer starting at 'page'.
+// If 'buf' is NULL or 'bufsize' is insufficient, return the packet length.
+// Returns the length read on success, 0 if no packet is available,
+// and -1 on error.
 int
 ne_pio_read(ne_t* ne, uchar* buf, int bufsize)
 {
   uint pktsize;
   ne_recv_hdr header;
   uint curr, bnry, page;
-  // CURR: 次にNICが書きこむべきページが格納
-  // BNRY: 次に読み込むべきページの一つ前のページが格納
-  // よって、CURRがBNRYに追いついたらOverflow
-  outb(ne->base + DP_CR, CR_PS_P1); // CURRはページ2なので切り替えが必要
+  // CURR: next page NIC will write.
+  // BNRY: page preceding the next packet to read.
+  // Ring overflow occurs when CURR catches up with BNRY.
+  outb(ne->base + DP_CR, CR_PS_P1); // CURR resides on page 2.
   curr = inb(ne->base + DP_CURR);
   outb(ne->base + DP_CR, CR_PS_P0 | CR_NO_DMA | CR_STA);
   bnry = inb(ne->base + DP_BNRY);
   page = bnry + 1;
   
-  // 末尾だったら先頭に。
+  // Wrap to start when reaching the end.
   if (page == ne->recv_stoppage)
     page = ne->recv_startpage;
 
-  // CURRに追いついた＝パケットがない（CURRはstoppageになることがあるのか？）
-  //if (bnry + 1 == curr || next == curr) {
+  // If CURR equals BNRY+1, there is no packet to read.
   if (page == curr) {
     cprintf("%s: no packet to read\n", ne->name);
     return 0;
   }
 
-  // バッファの先頭にあるヘッダ(StrageFormat)を読み出す
+  // Read the header located at the start of the buffer.
   ne_getblock(ne, page * DP_PAGESIZE, sizeof(header), &header);
-  // パケットサイズを算出
+  // Determine packet size.
   pktsize = (header.rbc0 | (header.rbc1 << 8)) - sizeof(header);
-  
-  // パケット長がイーサネットのパケットサイズ範囲内か
+
+  // Validate packet length against Ethernet limits.
   if (pktsize < ETH_MIN_SIZE || pktsize > ETH_MAX_SIZE) {
     cprintf("%s: Packet with strange length arrived: %d\n",
             ne->name, pktsize);
     return -1;
   }
-  // statusが問題ないか
+  // Verify receive status.
   if ((header.status & RSR_PRX) == 0) {
     cprintf("%s: Bad status: %d\n", ne->name, header.status);
     return -1;
@@ -364,7 +349,7 @@ ne_pio_read(ne_t* ne, uchar* buf, int bufsize)
   if (buf == 0 || pktsize > bufsize) {
     return pktsize;
   } else {
-    // データ読み込み。末尾から先頭に折り返しもチェックする。
+    // Read data, handling possible wrap-around.
     int remain = (ne->recv_stoppage - page) * DP_PAGESIZE;
     if (remain < pktsize) {
       ne_getblock(ne, page * DP_PAGESIZE + sizeof(header), remain, buf);
@@ -374,7 +359,7 @@ ne_pio_read(ne_t* ne, uchar* buf, int bufsize)
     }
   }
 
-  // 次のパケットの1ページ前にBNRYを進める
+  // Advance BNRY to one page before the next packet.
   bnry = header.next - 1;
   outb(ne->base + DP_BNRY,
        bnry < ne->recv_startpage ? ne->recv_stoppage-1 : bnry);

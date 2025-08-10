@@ -1,5 +1,5 @@
 
-// IPCをセットアップする。IPCの仕様次第なので、実装はまだできない。
+// Prepare IPC; actual implementation depends on the IPC specification.
 #define ETH_IPC_SETUP     1
 
 

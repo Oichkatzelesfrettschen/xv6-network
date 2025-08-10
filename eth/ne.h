@@ -2,10 +2,10 @@
 // Migrated from MINIX/drivers/dpeth/8390.h
 //
 
-// 1ページのサイズ(byte)
+// Size of one DP8390 memory page in bytes.
 #define DP_PAGESIZE     256     /* NS 8390 page size */
 
-// 送信に必要なページ数
+// Number of pages required to hold a maximum Ethernet frame.
 // DST(6) + SRC(6) + LEN(2) + DATA(max:1500) = 1514
 #define SENDQ_PAGES     6       /* SENDQ_PAGES * DP_PAGESIZE >= 1514 bytes */
 
@@ -152,29 +152,29 @@
 #define FALSE 0
 #endif
 
-// 後半16バイトはASICと呼ばれる。
-// 0x10-0x17はリモートDMAポート
-// 0x18-0x1Fはリセットポート
+// The upper 16 I/O ports belong to the ASIC.
+// 0x10-0x17: remote DMA ports
+// 0x18-0x1F: reset ports
 #define NE_DATA         0x10
 #define NE_RESET        0x1F
 
-// NEx000のバッファ使用領域
-#define NE1000_START    0x2000  // page 0x20 から
-#define NE1000_SIZE     0x2000  // page 0x40 までを送受信バッファとする
-#define NE2000_START    0x4000  // page 0x40 から
-#define NE2000_SIZE     0x4000  // page 0x80 までを送受信バッファとする
+// NEx000 buffer layout.
+#define NE1000_START    0x2000  // use pages 0x20-0x3F for buffers
+#define NE1000_SIZE     0x2000  //
+#define NE2000_START    0x4000  // use pages 0x40-0x7F for buffers
+#define NE2000_SIZE     0x4000  //
 
-// SENDQ_PAGES * SENDQ_LEN ページを送信バッファとして利用する
+// Number of SENDQ_PAGES blocks reserved for transmit buffers.
 #define SENDQ_LEN       2
 
 typedef void(*ne_callback_t)();
 
 typedef struct {
-  char name[8];        // 適当な名前
-  int irq;             // IRQ
-  int base;            // base port
+  char name[8];        // Device name
+  int irq;             // IRQ line
+  int base;            // base I/O port
   uchar address[6];    // MAC address
-  int is16bit;         // TRUE ? NE2000 : NE1000
+  int is16bit;         // TRUE for NE2000, FALSE for NE1000
   int ramsize;         // = NEx000_SIZE
   int pages;           // = ramsize / DP_PAGESIZE
   int startaddr;       // = NEx000_START
@@ -183,15 +183,15 @@ typedef struct {
   int recv_startpage;  // = send_stoppage + 1
   int recv_stoppage;   // = send_startpage + pages
 
-  // 送信バッファの状態
+  // State of transmit buffers
   struct {
-    int filled;        // バッファにパケットが入っているか
-    //int size;          // パケットサイズ(何ページ連結する必要があるかとか分かる)
-    int sendpage;      // ページ番号(初期化時にセット)
+    int filled;        // Packet present in this buffer?
+    //int size;          // Packet size (unused)
+    int sendpage;      // Starting page number (set at init)
   } sendq[SENDQ_LEN];
-  // ひたすら加算していく(SENDQ_LENで余りを取れば要素番号が得られる)
-  int sendq_head;      // 初期値 0
-  int sendq_tail;      // 初期値 SENDQ_LEN-1
+  // Monotonic counters; modulo SENDQ_LEN yields element index
+  int sendq_head;      // initial 0
+  int sendq_tail;      // initial SENDQ_LEN-1
   
 } ne_t;
 
