@@ -1,11 +1,11 @@
 
 h1. Xv6 with Network
 
-h2. Abstruct
+h2. Abstract
 
-This project will be the implementation of a network in xv6. Supported NIC will be NE2000. This implement referes to MINIX.
+This project will be the implementation of a network in xv6. Supported NIC will be NE2000. This implementation refers to MINIX.
 
-These source codes are licenced under the BSD license, which is the same as the licenses of xv6 and MINIX.
+These source codes are licensed under the BSD license, which is the same as the licenses of xv6 and MINIX.
 
 h2. Change Log
 
@@ -37,12 +37,12 @@ h4. Note:
 
 h3. 20110915
 
-I simply rewrite all files under "eth/" to 4 files and implement some TCP/IP protocol stack(Ethernet, IP, UDP, and DHCP), so interrupts occur and an IP address is got by DHCP in -both QEMU and- BOCHS. The IRQ number switches to 10 for IRQ conflicting in BOCHS. '.bochsrc' need to be changed about the ne2k setting.
+I simply rewrite all files under "eth/" to four files and implement some TCP/IP protocol stack (Ethernet, IP, UDP, and DHCP), so interrupts occur and an IP address is obtained by DHCP in -both QEMU and- BOCHS. The IRQ number switches to 10 for IRQ conflicts in BOCHS. '.bochsrc' need to be changed about the ne2k setting.
 
 h4. Note:
 
-* The implement don't work by building in cygwin(Why...?).
-** Building in linux(Ubuntu) work on qemu in both linux and cygwin.
+* The implementation doesn't work when built in Cygwin (Why...?).
+** Building in Linux (Ubuntu) works on QEMU in both Linux and Cygwin.
 * (APPEND) Interrupts don't occur in QEMU...
 
 h4. ToDo:
