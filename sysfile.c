@@ -148,7 +148,7 @@ bad:
 static int
 isdirempty(struct inode *dp)
 {
-  int off;
+  uint off;
   struct dirent de;
 
   for(off=2*sizeof(de); off<dp->size; off+=sizeof(de)){
@@ -352,7 +352,7 @@ sys_exec(void)
   }
   memset(argv, 0, sizeof(argv));
   for(i=0;; i++){
-    if(i >= NELEM(argv))
+    if(i >= (int)NELEM(argv))
       return -1;
     if(fetchint(proc, uargv+4*i, (int*)&uarg) < 0)
       return -1;

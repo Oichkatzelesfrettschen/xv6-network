@@ -127,6 +127,7 @@ lapiceoi(void)
 void
 microdelay(int us)
 {
+  (void)us;  // Parameter intentionally unused; timing loop not required on this platform.
 }
 
 #define IO_RTC  0x70

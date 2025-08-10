@@ -104,7 +104,7 @@ bootothers(void)
     // its first instruction.
     stack = kalloc();
     *(void**)(code-4) = stack + KSTACKSIZE;
-    *(void**)(code-8) = mpmain;
+    *(void (**)(void))(code-8) = mpmain;
 
     lapicstartap(c->id, (uint)code);
 

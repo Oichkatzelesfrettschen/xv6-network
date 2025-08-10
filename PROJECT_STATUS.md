@@ -6,3 +6,5 @@
 - Linker warnings for RWX segments silenced via --no-warn-rwx-segments.
 - Added patterns for build artifacts to `.gitignore`.
 - No build directories were present at cleanup time.
+- Enforced stricter compilation diagnostics by appending `-Wextra` and `-Wpedantic`
+  to `CFLAGS` in the `Makefile` to surface subtle issues during builds.

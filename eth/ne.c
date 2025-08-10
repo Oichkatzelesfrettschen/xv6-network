@@ -99,7 +99,7 @@ ne_probe(ne_t* ne)
       // ループバックモードなのでlocal receive DMAはまだ動いてない。
       { DP_CR, (CR_PS_P0 | CR_DM_RR | CR_STA) },
     };
-    for (i = 0; i < NELEM(seq); ++i)
+    for (i = 0; i < (int)NELEM(seq); ++i)
       outb(ne->base + seq[i].offset, seq[i].value);
     // 8ビットのNIC(NE1000?)かどうかもチェック
     ne->is16bit = TRUE;
@@ -209,7 +209,7 @@ ne_init(ne_t* ne)
       // (設定できるようにしたほうが良いのか？)
       { DP_RCR, RCR_PRO },
     };
-    for (i = 0; i < NELEM(seq); ++i)
+    for (i = 0; i < (int)NELEM(seq); ++i)
       outb(ne->base + seq[i].offset, seq[i].value);
   }
 
@@ -321,9 +321,9 @@ typedef struct {
 int
 ne_pio_read(ne_t* ne, uchar* buf, int bufsize)
 {
-  uint pktsize;
+  int pktsize;
   ne_recv_hdr header;
-  uint curr, bnry, page;
+  int curr, bnry, page;
   // CURR: 次にNICが書きこむべきページが格納
   // BNRY: 次に読み込むべきページの一つ前のページが格納
   // よって、CURRがBNRYに追いついたらOverflow
