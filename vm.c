@@ -79,9 +79,9 @@ mappages(pde_t *pgdir, void *la, uint size, uint pa, int perm)
 {
   char *a, *last;
   pte_t *pte;
-  
-  a = PGROUNDDOWN(la);
-  last = PGROUNDDOWN(la + size - 1);
+
+  a = PGROUNDDOWN((char*)la);
+  last = PGROUNDDOWN((char*)la + size - 1);
   for(;;){
     pte = walkpgdir(pgdir, a, 1);
     if(pte == 0)
@@ -142,7 +142,9 @@ setupkvm(void)
   memset(pgdir, 0, PGSIZE);
   k = kmap;
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
-    if(mappages(pgdir, k->p, k->e - k->p, (uint)k->p, k->perm) < 0)
+    if(mappages(pgdir, k->p,
+                (uint)((char*)k->e - (char*)k->p),
+                (uint)k->p, k->perm) < 0)
       return 0;
 
   return pgdir;
@@ -217,7 +219,7 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
       n = sz - i;
     else
       n = PGSIZE;
-    if(readi(ip, (char*)pa, offset+i, n) != n)
+    if(readi(ip, (char*)pa, offset+i, n) != (int)n)
       return -1;
   }
   return 0;

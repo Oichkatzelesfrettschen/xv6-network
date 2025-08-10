@@ -95,7 +95,7 @@ writetest1(void)
     exit();
   }
 
-  for(i = 0; i < MAXFILE; i++){
+  for(i = 0; (uint)i < MAXFILE; i++){
     ((int*)buf)[0] = i;
     if(write(fd, buf, 512) != 512){
       printf(stdout, "error: write big file failed\n", i);
@@ -236,7 +236,7 @@ pipe1(void)
       }
       total += n;
       cc = cc * 2;
-      if(cc > sizeof(buf))
+      if(cc > (int)sizeof(buf))
         cc = sizeof(buf);
     }
     if(total != 5 * 1033)
@@ -389,7 +389,7 @@ sharedfd(void)
   }
   nc = np = 0;
   while((n = read(fd, buf, sizeof(buf))) > 0){
-    for(i = 0; i < sizeof(buf); i++){
+    for(i = 0; i < (int)sizeof(buf); i++){
       if(buf[i] == 'c')
         nc++;
       if(buf[i] == 'p')
@@ -699,7 +699,7 @@ concreate(void)
       continue;
     if(de.name[0] == 'C' && de.name[2] == '\0'){
       i = de.name[1] - '0';
-      if(i < 0 || i >= sizeof(fa)){
+      if(i < 0 || (uint)i >= sizeof(fa)){
         printf(1, "concreate weird file %s\n", de.name);
         exit();
       }
@@ -1344,7 +1344,7 @@ sbrktest(void)
     printf(1, "pipe() failed\n");
     exit();
   }
-  for(i = 0; i < sizeof(pids)/sizeof(pids[0]); i++){
+  for(i = 0; i < (int)(sizeof(pids)/sizeof(pids[0])); i++){
     if((pids[i] = fork()) == 0){
       // allocate the full 640K
       sbrk((640 * 1024) - (uint)sbrk(0));
@@ -1358,7 +1358,7 @@ sbrktest(void)
   // if those failed allocations freed up the pages they did allocate,
   // we'll be able to allocate here
   c = sbrk(4096);
-  for(i = 0; i < sizeof(pids)/sizeof(pids[0]); i++){
+  for(i = 0; i < (int)(sizeof(pids)/sizeof(pids[0])); i++){
     if(pids[i] == -1)
       continue;
     kill(pids[i]);
@@ -1426,7 +1426,7 @@ bsstest(void)
   int i;
 
   printf(stdout, "bss test\n");
-  for(i = 0; i < sizeof(uninit); i++){
+  for(i = 0; i < (int)sizeof(uninit); i++){
     if(uninit[i] != '\0'){
       printf(stdout, "bss test failed\n");
       exit();
@@ -1462,6 +1462,8 @@ bigargtest(void)
 int
 main(int argc, char *argv[])
 {
+  (void)argc;
+  (void)argv;
   printf(1, "usertests starting\n");
 
   if(open("usertests.ran", 0) >= 0){

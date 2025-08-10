@@ -99,7 +99,7 @@ ne_probe(ne_t* ne)
       // ループバックモードなのでlocal receive DMAはまだ動いてない。
       { DP_CR, (CR_PS_P0 | CR_DM_RR | CR_STA) },
     };
-    for (i = 0; i < NELEM(seq); ++i)
+    for (i = 0; (uint)i < NELEM(seq); ++i)
       outb(ne->base + seq[i].offset, seq[i].value);
     // 8ビットのNIC(NE1000?)かどうかもチェック
     ne->is16bit = TRUE;
@@ -209,7 +209,7 @@ ne_init(ne_t* ne)
       // (設定できるようにしたほうが良いのか？)
       { DP_RCR, RCR_PRO },
     };
-    for (i = 0; i < NELEM(seq); ++i)
+    for (i = 0; (uint)i < NELEM(seq); ++i)
       outb(ne->base + seq[i].offset, seq[i].value);
   }
 
@@ -334,7 +334,7 @@ ne_pio_read(ne_t* ne, uchar* buf, int bufsize)
   page = bnry + 1;
   
   // 末尾だったら先頭に。
-  if (page == ne->recv_stoppage)
+  if (page == (uint)ne->recv_stoppage)
     page = ne->recv_startpage;
 
   // CURRに追いついた＝パケットがない（CURRはstoppageになることがあるのか？）
@@ -361,12 +361,12 @@ ne_pio_read(ne_t* ne, uchar* buf, int bufsize)
     return -1;
   }
 
-  if (buf == 0 || pktsize > bufsize) {
+  if (buf == 0 || pktsize > (uint)bufsize) {
     return pktsize;
   } else {
     // データ読み込み。末尾から先頭に折り返しもチェックする。
-    int remain = (ne->recv_stoppage - page) * DP_PAGESIZE;
-    if (remain < pktsize) {
+    int remain = (ne->recv_stoppage - (int)page) * DP_PAGESIZE;
+    if ((uint)remain < pktsize) {
       ne_getblock(ne, page * DP_PAGESIZE + sizeof(header), remain, buf);
       ne_getblock(ne, ne->recv_startpage * DP_PAGESIZE, pktsize - remain, buf);
     } else {
@@ -377,7 +377,8 @@ ne_pio_read(ne_t* ne, uchar* buf, int bufsize)
   // 次のパケットの1ページ前にBNRYを進める
   bnry = header.next - 1;
   outb(ne->base + DP_BNRY,
-       bnry < ne->recv_startpage ? ne->recv_stoppage-1 : bnry);
+       bnry < (uint)ne->recv_startpage ?
+       (uint)(ne->recv_stoppage - 1) : bnry);
 
   return pktsize;
 }

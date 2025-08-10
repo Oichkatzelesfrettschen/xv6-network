@@ -19,6 +19,8 @@ ethintr()
 int
 ethioctl(struct inode* ip, int request, void* p)
 {
+  (void)ip;  // Unused in current implementation
+  (void)p;
   switch (request) {
   case ETH_IPC_SETUP:
     cprintf("%s: ETH_IPC_SETUP isn't still implemented because of no IPC\n", ne.name);
@@ -30,12 +32,14 @@ ethioctl(struct inode* ip, int request, void* p)
 int
 ethread(struct inode* ip, char* p, int n)
 {
+  (void)ip;  // Unused
   return ne_pio_read(&ne, (uchar*)p, n);
 }
 
 int
 ethwrite(struct inode* ip, char* p, int n)
 {
+  (void)ip;  // Unused
   return ne_pio_write(&ne, (uchar*)p, n);
 }
 
@@ -50,7 +54,7 @@ ethinit()
   devsw[ETHERNET].read = ethread;
   devsw[ETHERNET].ioctl = ethioctl;
 
-  for (i = 0; i < NELEM(ports); ++i) {
+  for (i = 0; (uint)i < NELEM(ports); ++i) {
     cprintf("Ethernet: Initialize port %d.\n", i);
     memset(&ne, 0, sizeof(ne));
     name[3] = '0' + i;
