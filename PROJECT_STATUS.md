@@ -6,3 +6,5 @@
 - Linker warnings for RWX segments silenced via --no-warn-rwx-segments.
 - Added patterns for build artifacts to `.gitignore`.
 - No build directories were present at cleanup time.
+- Removed `xv6-rev5.tar.gz` and added `*.tar.gz` to `.gitignore` to avoid
+  committing archived sources.

@@ -15,7 +15,8 @@ ethintr()
   return;
 }
 
-// not used because ioctl() isn't still implemented.
+// Handle Ethernet-specific ioctl() requests.
+// At present only ETH_IPC_SETUP is recognized, which remains unimplemented.
 int
 ethioctl(struct inode* ip, int request, void* p)
 {
