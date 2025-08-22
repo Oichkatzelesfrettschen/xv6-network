@@ -23,7 +23,8 @@ exec(char *path, char **argv)
   pgdir = 0;
 
   // Check ELF header
-  if(readi(ip, (char*)&elf, 0, sizeof(elf)) < sizeof(elf))
+  // Ensure the full ELF header is read; cast to avoid signed/unsigned comparison.
+  if(readi(ip, (char*)&elf, 0, sizeof(elf)) < (int)sizeof(elf))
     goto bad;
   if(elf.magic != ELF_MAGIC)
     goto bad;
@@ -34,7 +35,7 @@ exec(char *path, char **argv)
   // Load program into memory.
   sz = 0;
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
-    if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
+    if(readi(ip, (char*)&ph, off, sizeof(ph)) != (int)sizeof(ph))
       goto bad;
     if(ph.type != ELF_PROG_LOAD)
       continue;
