@@ -95,7 +95,7 @@ writetest1(void)
     exit();
   }
 
-  for(i = 0; i < (int)MAXFILE; i++){
+  for(i = 0; (uint)i < MAXFILE; i++){
     ((int*)buf)[0] = i;
     if(write(fd, buf, 512) != 512){
       printf(stdout, "error: write big file failed\n", i);
@@ -126,7 +126,7 @@ writetest1(void)
     }
     if(((int*)buf)[0] != n){
       printf(stdout, "read content of block %d is %d\n",
-             n, ((int*)buf)[0]);
+              n, ((int*)buf)[0]);
       exit();
     }
     n++;
@@ -237,7 +237,7 @@ pipe1(void)
       total += n;
       cc = cc * 2;
       if(cc > (int)sizeof(buf))
-        cc = (int)sizeof(buf);
+        cc = sizeof(buf);
     }
     if(total != 5 * 1033)
       printf(1, "pipe1 oops 3 total %d\n", total);
@@ -699,7 +699,7 @@ concreate(void)
       continue;
     if(de.name[0] == 'C' && de.name[2] == '\0'){
       i = de.name[1] - '0';
-      if(i < 0 || i >= (int)sizeof(fa)){
+      if(i < 0 || (uint)i >= sizeof(fa)){
         printf(1, "concreate weird file %s\n", de.name);
         exit();
       }
@@ -726,7 +726,7 @@ concreate(void)
       exit();
     }
     if(((i % 3) == 0 && pid == 0) ||
-       ((i % 3) == 1 && pid != 0)){
+        ((i % 3) == 1 && pid != 0)){
       fd = open(file, 0);
       close(fd);
     } else {
@@ -1446,7 +1446,7 @@ bigargtest(void)
     char *args[32+1];
     int i;
     for(i = 0; i < 32; i++)
-      args[i] = "bigargs test: failed\n                                                                                                                     ";
+      args[i] = "bigargs test: failed\n                                                                                                              ";
     args[32] = 0;
     printf(stdout, "bigarg test\n");
     exec("echo", args);

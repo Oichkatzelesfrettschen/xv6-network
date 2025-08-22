@@ -1,13 +1,13 @@
 // File system implementation.  Four layers:
-//   + Blocks: allocator for raw disk blocks.
-//   + Files: inode allocator, reading, writing, metadata.
-//   + Directories: inode with special contents (list of other inodes!)
-//   + Names: paths like /usr/rtm/xv6/fs.c for convenient naming.
+//    + Blocks: allocator for raw disk blocks.
+//    + Files: inode allocator, reading, writing, metadata.
+//    + Directories: inode with special contents (list of other inodes!)
+//    + Names: paths like /usr/rtm/xv6/fs.c for convenient naming.
 //
 // Disk layout is: superblock, inodes, block in-use bitmap, data blocks.
 //
 // This file contains the low-level file system manipulation 
-// routines.  The (higher-level) system call implementations
+// routines. The (higher-level) system call implementations
 // are in sysfile.c.
 
 #include "types.h"
@@ -47,13 +47,13 @@ bzero(int dev, int bno)
   brelse(bp);
 }
 
-// Blocks. 
+// Blocks.  
 
 // Allocate a disk block.
 static uint
 balloc(uint dev)
 {
-  uint b;
+  uint b;     // Block index as unsigned to match superblock fields
   int bi, m;
   struct buf *bp;
   struct superblock sb;
@@ -105,7 +105,7 @@ bfree(int dev, uint b)
 // data can be found.
 //
 // The inodes are laid out sequentially on disk immediately after
-// the superblock.  The kernel keeps a cache of the in-use
+// the superblock. The kernel keeps a cache of the in-use
 // on-disk structures to provide a place for synchronizing access
 // to inodes shared between multiple processes.
 // 
@@ -119,15 +119,15 @@ bfree(int dev, uint b)
 // represented by the I_BUSY flag in the in-memory copy.
 // Because inode locks are held during disk accesses, 
 // they are implemented using a flag rather than with
-// spin locks.  Callers are responsible for locking
+// spin locks. Callers are responsible for locking
 // inodes before passing them to routines in this file; leaving
 // this responsibility with the caller makes it possible for them
 // to create arbitrarily-sized atomic operations.
 //
 // To give maximum control over locking to the callers, 
 // the routines in this file that return inode pointers 
-// return pointers to *unlocked* inodes.  It is the callers'
-// responsibility to lock them before using them.  A non-zero
+// return pointers to *unlocked* inodes. It is the callers'
+// responsibility to lock them before using them. A non-zero
 // ip->ref keeps these unlocked inodes in the cache.
 
 struct {
@@ -147,7 +147,7 @@ static struct inode* iget(uint dev, uint inum);
 struct inode*
 ialloc(uint dev, short type)
 {
-  uint inum;
+  uint inum;    // Inode number tracked as unsigned to align with sb.ninodes
   struct buf *bp;
   struct dinode *dip;
   struct superblock sb;
@@ -159,7 +159,7 @@ ialloc(uint dev, short type)
     if(dip->type == 0){  // a free inode
       memset(dip, 0, sizeof(*dip));
       dip->type = type;
-      bwrite(bp);   // mark it allocated on the disk
+      bwrite(bp);    // mark it allocated on the disk
       brelse(bp);
       return iget(dev, inum);
     }
@@ -278,7 +278,7 @@ iunlock(struct inode *ip)
   release(&icache.lock);
 }
 
-// Caller holds reference to unlocked ip.  Drop reference.
+// Caller holds reference to unlocked ip. Drop reference.
 void
 iput(struct inode *ip)
 {
@@ -311,8 +311,8 @@ iunlockput(struct inode *ip)
 // Inode contents
 //
 // The contents (data) associated with each inode is stored
-// in a sequence of blocks on the disk.  The first NDIRECT blocks
-// are listed in ip->addrs[].  The next NINDIRECT blocks are 
+// in a sequence of blocks on the disk. The first NDIRECT blocks
+// are listed in ip->addrs[]. The next NINDIRECT blocks are 
 // listed in the block ip->addrs[NDIRECT].
 
 // Return the disk block address of the nth block in inode ip.
@@ -353,7 +353,8 @@ bmap(struct inode *ip, uint bn)
 static void
 itrunc(struct inode *ip)
 {
-  uint i, j;
+  int i;
+  uint j;      // Use unsigned index to iterate over NINDIRECT entries
   struct buf *bp;
   uint *a;
 
@@ -475,8 +476,8 @@ dirlookup(struct inode *dp, char *name, uint *poff)
   for(off = 0; off < dp->size; off += BSIZE){
     bp = bread(dp->dev, bmap(dp, off / BSIZE));
     for(de = (struct dirent*)bp->data;
-        de < (struct dirent*)(bp->data + BSIZE);
-        de++){
+         de < (struct dirent*)(bp->data + BSIZE);
+         de++){
       if(de->inum == 0)
         continue;
       if(namecmp(name, de->name) == 0){
@@ -497,7 +498,7 @@ dirlookup(struct inode *dp, char *name, uint *poff)
 int
 dirlink(struct inode *dp, char *name, uint inum)
 {
-  uint off;
+  uint off;   // Offset within directory sized consistently with dp->size
   struct dirent de;
   struct inode *ip;
 
@@ -532,10 +533,10 @@ dirlink(struct inode *dp, char *name, uint inum)
 // If no name to remove, return 0.
 //
 // Examples:
-//   skipelem("a/bb/c", name) = "bb/c", setting name = "a"
-//   skipelem("///a//bb", name) = "bb", setting name = "a"
-//   skipelem("a", name) = "", setting name = "a"
-//   skipelem("", name) = skipelem("////", name) = 0
+//    skipelem("a/bb/c", name) = "bb/c", setting name = "a"
+//    skipelem("///a//bb", name) = "bb", setting name = "a"
+//    skipelem("a", name) = "", setting name = "a"
+//    skipelem("", name) = skipelem("////", name) = 0
 //
 static char*
 skipelem(char *path, char *name)
