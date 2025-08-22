@@ -16,37 +16,37 @@ getip(int fd)
 {
   // DHCPパケットを作成し、IPアドレスを取得
   static eth_hdr_t ethhdr = {
-    dst: { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
-    src: { MAC_ADDRESS },
-    length: HTONS(ETH_TYPE_IP4),
+    .dst = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
+    .src = { MAC_ADDRESS },
+    .length = HTONS(ETH_TYPE_IP4),
   };
   static ip4_hdr_t iphdr = {
-    ver_ihl: 0x45,
-    tos: 0,
-    length: 0, // calc later
-    id: 0,
-    flag_fo: 0,
-    ttl: 0xFF,
-    protocol: IP_PROTOCOL_UDP,
-    checksum: 0,
-    src: { 0x00, 0x00, 0x00, 0x00 }, // none
-    dst: { 0xFF, 0xFF, 0xFF, 0xFF }, // broadcast
+    .ver_ihl = 0x45,
+    .tos = 0,
+    .length = 0, // calc later
+    .id = 0,
+    .flag_fo = 0,
+    .ttl = 0xFF,
+    .protocol = IP_PROTOCOL_UDP,
+    .checksum = 0,
+    .src = { 0x00, 0x00, 0x00, 0x00 }, // none
+    .dst = { 0xFF, 0xFF, 0xFF, 0xFF }, // broadcast
   };
   static udp_hdr_t udphdr = {
-    src: HTONS(UDP_PORT_BOOTPC),
-    dst: HTONS(UDP_PORT_BOOTPS),
-    length: 0, // calc later
-    checksum: 0,
+    .src = HTONS(UDP_PORT_BOOTPC),
+    .dst = HTONS(UDP_PORT_BOOTPS),
+    .length = 0, // calc later
+    .checksum = 0,
   };
   static dhcp_t dhcp = {
-    op: DHCP_OP_BOOTREQUEST,
-    htype: DHCP_HTYPE_ETH,
-    hlen: DHCP_HLEN_ETH,
-    xid: 0,
-    flags: DHCP_FLAGS_BCAST,
-    chaddr: { MAC_ADDRESS },
-    magic: HTONL(DHCP_MAGIC),
-    options: {
+    .op = DHCP_OP_BOOTREQUEST,
+    .htype = DHCP_HTYPE_ETH,
+    .hlen = DHCP_HLEN_ETH,
+    .xid = 0,
+    .flags = DHCP_FLAGS_BCAST,
+    .chaddr = { MAC_ADDRESS },
+    .magic = HTONL(DHCP_MAGIC),
+    .options = {
       DHCP_TAG_TYPE, 1, DHCP_DISCOVER,
       DHCP_TAG_CLIENTID, 7, 1, MAC_ADDRESS,
       0xFF, // stopper
@@ -104,6 +104,8 @@ ethtest(int fd)
 int
 main(int argc, char** argv)
 {
+  (void)argc;
+  (void)argv;
   int fd = open("eth", O_RDWR);
   if (fd < 0) {
     printf(1, "open: cannot open %s\n", "eth");
