@@ -8,11 +8,5 @@
  * availability of an IPC mechanism. See ethtest.c for usage examples.
  */
 
-/*
- * TODO: ioctl request codes understood by ethioctl().
- *
- * ETH_IPC_SETUP
- * Prepares the device for inter-process communication. This feature serves as a
- * placeholder until a full IPC mechanism is implemented.
- */
-#define ETH_IPC_SETUP 1
+// Prepare IPC; actual implementation depends on the IPC specification.
+#define ETH_IPC_SETUP     1

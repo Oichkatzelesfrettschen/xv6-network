@@ -46,6 +46,46 @@ Bochs makes debugging easier, but QEMU is much faster.
 To run in Bochs, run "make bochs" and then type "c" at the bochs prompt.
 To run in QEMU, run "make qemu".
 
+NETWORKING AND THE NE2000 DRIVER
+--------------------------------
+This tree integrates an NE2000-compatible network interface driver.  The
+driver is built along with the kernel and requires a compiler capable of
+producing 32-bit x86 *ELF* binaries.  On machines where the native toolchain
+cannot emit such binaries, install the `i386-jos-elf` cross compiler and set
+`TOOLPREFIX=i386-jos-elf-` when invoking `make`.
+
+Installing the cross toolchain
+------------------------------
+The cross compiler used by xv6 originates from the MIT 6.828 teaching
+material.  A typical Unix-like host can install it as follows:
+
+1. **Fetch and build the toolchain**
+
+       git clone https://github.com/mit-pdos/gnu-toolchain.git
+       cd gnu-toolchain
+       ./configure --target=i386-jos-elf --prefix=$HOME/opt/cross
+       make && make install
+
+2. **Expose the binaries**
+
+       export PATH=$HOME/opt/cross/bin:$PATH
+
+After installation, running `i386-jos-elf-gcc --version` should display the
+cross compiler.  Subsequent builds can then use
+
+    make TOOLPREFIX=i386-jos-elf-
+
+Running QEMU with networking
+---------------------------
+`make qemu` launches QEMU with user-mode networking and an NE2000 PCI device:
+
+    make qemu    # -net nic,model=ne2k_pci,macaddr=52:54:00:12:34:56 -net user
+
+The Makefile also provides an ISA variant using `make qemu-isa`, which emulates
+an ISA NE2000 card.  Adjust `QEMUOPTS` in the Makefile to employ alternative
+network back ends such as TAP or bridging for experiments requiring a real
+network.
+
 BUILD PROFILES
 
 For repeatable builds the repository ships with a small helper script,
