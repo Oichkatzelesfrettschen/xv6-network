@@ -240,7 +240,7 @@ consoleread(struct inode *ip, char *dst, int n)
     }
     c = input.buf[input.r++ % INPUT_BUF];
     if(c == C('D')){  // EOF
-      if((uint)n < target){
+      if(n < target){
         // Save ^D for next time, to make sure
         // caller gets a 0-byte result.
         input.r--;
