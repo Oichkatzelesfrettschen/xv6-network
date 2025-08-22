@@ -41,6 +41,17 @@ need to install a cross-compiler gcc suite capable of producing x86 ELF
 binaries.  See http://pdos.csail.mit.edu/6.828/2007/tools.html.
 Then run "make TOOLPREFIX=i386-jos-elf-".
 
+Alternatively, a convenience script `build.sh` provides curated
+optimization profiles and encapsulates common build steps. Example
+invocations are shown below:
+
+    ./build.sh --profile=developer   # debug-oriented build with symbols
+    ./build.sh --profile=performance # maximal optimizations for benchmarking
+    ./build.sh --profile=release     # production build with assertions removed
+
+The script cleans the tree before compilation and parallelizes the
+build using all available processors.
+
 To run xv6, you can use Bochs or QEMU, both PC simulators.
 Bochs makes debugging easier, but QEMU is much faster.
 To run in Bochs, run "make bochs" and then type "c" at the bochs prompt.
