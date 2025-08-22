@@ -39,9 +39,8 @@ int ethioctl(struct inode* ip, int request, void* p) {
     switch (request) {
         case ETH_IPC_SETUP:
             // This request is not yet implemented because the IPC mechanism is
-            // not yet available. A cprintf message is used for debugging.
-            cprintf("%s: ETH_IPC_SETUP is unimplemented due to missing IPC functionality.\n", ne.name);
-            break;
+            // not yet available. Since this is critical functionality, panic.
+            panic("ETH_IPC_SETUP is unimplemented due to missing IPC functionality");
 
         default:
             // For any unrecognized request, a message can be logged, and an
