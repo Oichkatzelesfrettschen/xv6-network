@@ -43,6 +43,7 @@ cscope.*
 *.tar.gz
 # Build directories
 build*/
+build/
 builds/
 */CMakeFiles/
 
