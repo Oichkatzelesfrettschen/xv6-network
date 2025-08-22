@@ -330,7 +330,7 @@ int ne_pio_read(ne_t* ne, uchar* buf, int bufsize) {
     // Check if the current page to read is the same as the page the NIC is
     // currently writing to. If so, there are no unread packets.
     if (page == curr) {
-        cprintf("%s: No packet to read.\n", ne->name);
+        cprintf("%s: No packet to read.\n", ne.name);
         return 0;
     }
 

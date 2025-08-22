@@ -126,7 +126,7 @@ writetest1(void)
     }
     if(((int*)buf)[0] != n){
       printf(stdout, "read content of block %d is %d\n",
-             n, ((int*)buf)[0]);
+              n, ((int*)buf)[0]);
       exit();
     }
     n++;
@@ -726,7 +726,7 @@ concreate(void)
       exit();
     }
     if(((i % 3) == 0 && pid == 0) ||
-       ((i % 3) == 1 && pid != 0)){
+        ((i % 3) == 1 && pid != 0)){
       fd = open(file, 0);
       close(fd);
     } else {
@@ -1446,7 +1446,7 @@ bigargtest(void)
     char *args[32+1];
     int i;
     for(i = 0; i < 32; i++)
-      args[i] = "bigargs test: failed\n                                                                                                                     ";
+      args[i] = "bigargs test: failed\n                                                                                                              ";
     args[32] = 0;
     printf(stdout, "bigarg test\n");
     exec("echo", args);

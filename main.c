@@ -20,7 +20,7 @@ main(void)
   lapicinit(mpbcpu());
   seginit();       // set up segments
   kinit();         // initialize memory allocator
-  jmpkstack();       // call mainc() on a properly-allocated stack 
+  jmpkstack();     // call mainc() on a properly-allocated stack 
 }
 
 void
@@ -73,7 +73,7 @@ mpmain(void)
     seginit();
     lapicinit(cpunum());
   }
-  vmenable();        // turn on paging
+  vmenable();      // turn on paging
   cprintf("cpu%d: starting\n", cpu->id);
   idtinit();       // load idt register
   xchg(&cpu->booted, 1); // tell bootothers() we're up
@@ -115,4 +115,3 @@ bootothers(void)
 }
 
 // Blank page.
-

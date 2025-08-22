@@ -47,7 +47,7 @@ seginit(void)
 }
 
 // Return the address of the PTE in page table pgdir
-// that corresponds to linear address va.  If create!=0,
+// that corresponds to linear address va. If create!=0,
 // create any required page table pages.
 static pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int create)
@@ -106,16 +106,16 @@ mappages(pde_t *pgdir, void *la, uint size, uint pa, int perm)
 // than its memory.
 // 
 // setupkvm() and exec() set up every page table like this:
-//   0..640K          : user memory (text, data, stack, heap)
-//   640K..1M         : mapped direct (for IO space)
-//   1M..end          : mapped direct (for the kernel's text and data)
-//   end..PHYSTOP     : mapped direct (kernel heap and user pages)
-//   0xfe000000..0    : mapped direct (devices such as ioapic)
+//    0..640K           : user memory (text, data, stack, heap)
+//    640K..1M          : mapped direct (for IO space)
+//    1M..end           : mapped direct (for the kernel's text and data)
+//    end..PHYSTOP      : mapped direct (kernel heap and user pages)
+//    0xfe000000..0     : mapped direct (devices such as ioapic)
 //
 // The kernel allocates memory for its heap and for user memory
 // between kernend and the end of physical memory (PHYSTOP).
 // The virtual address space of each user program includes the kernel
-// (which is inaccessible in user mode).  The user program addresses
+// (which is inaccessible in user mode). The user program addresses
 // range from 0 till 640KB (USERTOP), which where the I/O hole starts
 // (both in physical memory and in the kernel's virtual address
 // space).
@@ -125,7 +125,7 @@ static struct kmap {
   int perm;
 } kmap[] = {
   {(void*)USERTOP,    (void*)0x100000, PTE_W},  // I/O space
-  {(void*)0x100000,   data,            0    },  // kernel text, rodata
+  {(void*)0x100000,    data,            0    },  // kernel text, rodata
   {data,              (void*)PHYSTOP,  PTE_W},  // kernel data, memory
   {(void*)0xFE000000, 0,               PTE_W},  // device mappings
 };
@@ -140,7 +140,6 @@ setupkvm(void)
   if((pgdir = (pde_t*)kalloc()) == 0)
     return 0;
   memset(pgdir, 0, PGSIZE);
-  k = kmap;
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
     if(mappages(pgdir, k->p,
                 (uint)((char*)k->e - (char*)k->p),
@@ -167,7 +166,7 @@ vmenable(void)
 void
 switchkvm(void)
 {
-  lcr3(PADDR(kpgdir));   // switch to the kernel page table
+  lcr3(PADDR(kpgdir));    // switch to the kernel page table
 }
 
 // Switch TSS and h/w page table to correspond to process p.
@@ -214,6 +213,8 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, addr+i, 0)) == 0)
       panic("loaduvm: address should exist");
+    if(!(*pte & PTE_P))
+      panic("loaduvm: page not present");
     pa = PTE_ADDR(*pte);
     if(sz - i < PGSIZE)
       n = sz - i;
@@ -226,7 +227,7 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 }
 
 // Allocate page tables and physical memory to grow process from oldsz to
-// newsz, which need not be page aligned.  Returns new size or 0 on error.
+// newsz, which need not be page aligned. Returns new size or 0 on error.
 int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
@@ -253,9 +254,9 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 }
 
 // Deallocate user pages to bring the process size from oldsz to
-// newsz.  oldsz and newsz need not be page-aligned, nor does newsz
-// need to be less than oldsz.  oldsz can be larger than the actual
-// process size.  Returns the new process size.
+// newsz. oldsz and newsz need not be page-aligned, nor does newsz
+// need to be less than oldsz. oldsz can be larger than the actual
+// process size. Returns the new process size.
 int
 deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
@@ -266,7 +267,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     return oldsz;
 
   a = PGROUNDUP(newsz);
-  for(; a  < oldsz; a += PGSIZE){
+  for(; a < oldsz; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
     if(pte && (*pte & PTE_P) != 0){
       pa = PTE_ADDR(*pte);

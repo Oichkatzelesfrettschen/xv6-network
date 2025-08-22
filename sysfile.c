@@ -148,7 +148,7 @@ bad:
 static int
 isdirempty(struct inode *dp)
 {
-  uint off;  // Offset within directory treated as unsigned to match size field
+  uint off; // Offset within directory treated as unsigned to match size field
   struct dirent de;
 
   for(off = 2*sizeof(de); off < dp->size; off += sizeof(de)){
@@ -313,9 +313,9 @@ sys_mknod(void)
   int major, minor;
   
   if((len=argstr(0, &path)) < 0 ||
-     argint(1, &major) < 0 ||
-     argint(2, &minor) < 0 ||
-     (ip = create(path, T_DEV, major, minor)) == 0)
+      argint(1, &major) < 0 ||
+      argint(2, &minor) < 0 ||
+      (ip = create(path, T_DEV, major, minor)) == 0)
     return -1;
   iunlockput(ip);
   return 0;
@@ -401,5 +401,3 @@ sys_ioctl(void)
     return -1;
   return fileioctl(f, req, p);
 }
-
-
