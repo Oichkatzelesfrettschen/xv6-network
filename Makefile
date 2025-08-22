@@ -1,33 +1,33 @@
 OBJS = \
-	bio.o\
-	console.o\
-	exec.o\
-	file.o\
-	fs.o\
-	ide.o\
-	ioapic.o\
-	kalloc.o\
-	kbd.o\
-	lapic.o\
-	main.o\
-	mp.o\
-	picirq.o\
-	pipe.o\
-	proc.o\
-	spinlock.o\
-	string.o\
-	swtch.o\
-	syscall.o\
-	sysfile.o\
-	sysproc.o\
-	timer.o\
-	trapasm.o\
-	trap.o\
-	uart.o\
-	vectors.o\
-	vm.o\
-	eth/ne.o\
-	eth/eth.o\
+	bio.o \
+	console.o \
+	exec.o \
+	file.o \
+	fs.o \
+	ide.o \
+	ioapic.o \
+	kalloc.o \
+	kbd.o \
+	lapic.o \
+	main.o \
+	mp.o \
+	picirq.o \
+	pipe.o \
+	proc.o \
+	spinlock.o \
+	string.o \
+	swtch.o \
+	syscall.o \
+	sysfile.o \
+	sysproc.o \
+	timer.o \
+	trapasm.o \
+	trap.o \
+	uart.o \
+	vectors.o \
+	vm.o \
+	eth/ne.o \
+	eth/eth.o \
 
 # Cross-compiling (e.g., on Mac OS X)
 #TOOLPREFIX = i386-jos-elf-
@@ -76,7 +76,7 @@ OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 # Enforce rigorous compilation by enabling comprehensive warnings for
 # potential undefined behavior and strict ISO compliance.
-CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -Wextra -pedantic -MD -ggdb -m32 -Werror
+CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -Wextra -Wpedantic -MD -ggdb -m32 -Werror
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 # Ensure all assembly sources emit the .note.GNU-stack section
 CFLAGS += -Wa,--noexecstack
@@ -251,4 +251,3 @@ qemu-gdb: fs.img xv6.img .gdbinit
 qemu-nox-gdb: fs.img xv6.img .gdbinit
 	@echo "*** Now run 'gdb'." 1>&2
 	$(QEMU) -nographic $(QEMUOPTS) -S $(QEMUGDB)
-

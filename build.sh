@@ -1,61 +1,143 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# build.sh - Configurable build script for xv6-network
+# build.sh - Profile-driven build system for xv6.
 #
-# This script acts as a thin wrapper around the repository's Makefile.
-# It exposes a user-friendly interface for selecting build profiles that
-# tune compilation flags for different development scenarios.
+# This script is a wrapper around the xv6 Makefile that provides a
+# user-friendly way to build the kernel with different optimization
+# and debugging settings. It supports distinct profiles (developer,
+# performance, release) by injecting specific CFLAGS into the build
+# process. Build artifacts are neatly organized into profile-specific
+# directories.
 #
 # Usage:
-#   ./build.sh --profile=<developer|performance|release>
+#   ./build.sh [--help] <PROFILE> [make-args]
 #
-# Profiles:
-#   developer   - Unoptimized build with maximal debug information and
-#                 debug-friendly defines. Suitable for day-to-day kernel
-#                 hacking and introspection under debuggers.
-#   performance - Aggressively optimized build aimed at benchmarking on
-#                 the local machine. Prioritizes speed over debuggability.
-#   release     - Production-style build with optimizations and assertions
-#                 disabled. Generates smaller binaries intended for
-#                 distribution or deployment.
-#
-# When invoked with no arguments or an unsupported profile, the script
-# prints this help text.
+# The script is designed to be self-documenting, with clear explanations
+# of each step to promote reproducibility and understanding.
 
 set -euo pipefail
 
-# Display usage information and exit.
-usage() {
-	cat <<USAGE
-Usage: $0 --profile=developer|performance|release
+# ---
+# Help and Usage
+# ---
+
+show_help() {
+  cat <<'USAGE'
+Usage: ./build.sh [--help] PROFILE [make-args]
+
+Compile the xv6 kernel and associated utilities according to the specified PROFILE.
+
+Profiles:
+  developer    Unoptimized build with debug information. Ideal for debugging.
+  performance  Optimized build for profiling and performance testing.
+  release      Fully optimized, stripped binaries for distribution.
+
+Options:
+  -h, --help   Display this help message and exit.
+
+Additional make arguments can be provided after the profile name and will be
+forwarded directly to the underlying `make` command.
 USAGE
-	exit 1
 }
 
-# Ensure a profile was supplied.
-[[ $# -eq 0 ]] && usage
+# ---
+# Argument Parsing
+# ---
+
+if [[ $# -eq 0 ]]; then
+  echo "Error: missing build profile." >&2
+  show_help
+  exit 1
+fi
 
 case "$1" in
---profile=developer)
-	# Debugging build: disable optimizations, keep symbols, add DEBUG define
-	CFLAGS_PROFILE="-O0 -g3 -fno-omit-frame-pointer -DDEBUG"
-	;;
---profile=performance)
-	# High-performance build: enable LTO and target local architecture
-	CFLAGS_PROFILE="-O3 -march=native -flto -fomit-frame-pointer"
-	;;
---profile=release)
-	# Release build: moderate optimization, strip symbols, disable asserts
-	CFLAGS_PROFILE="-O2 -DNDEBUG -s"
-	;;
-*)
-	usage
-	;;
+  -h|--help)
+    show_help
+    exit 0
+    ;;
+  developer|performance|release)
+    profile="$1"
+    shift
+    ;;
+  *)
+    echo "Error: unknown profile '$1'." >&2
+    show_help
+    exit 1
+    ;;
 esac
 
-# Always start from a clean tree to avoid stale objects with wrong flags.
+# ---
+# Configuration
+# ---
+
+# Baseline flags for all builds, ensuring essential compiler options are
+# always present. These are consistent with the project's core Makefile.
+base_cflags=(
+  -fno-pic -static -fno-builtin -fno-strict-aliasing
+  -Wall -Wextra -Wpedantic -MD -m32 -Werror -fno-stack-protector -Wa,--noexecstack
+)
+
+# Profile-specific compiler flags.
+case "$profile" in
+  developer)
+    profile_cflags=(-O0 -g -fno-omit-frame-pointer -DDEBUG)
+    ;;
+  performance)
+    profile_cflags=(-O3 -g -fomit-frame-pointer -march=native -mtune=native -pipe)
+    ;;
+  release)
+    profile_cflags=(-O3 -DNDEBUG -s -fomit-frame-pointer -march=native -mtune=native)
+    ;;
+  *)
+    echo "Internal error: Unhandled profile '$profile'." >&2
+    exit 1
+    ;;
+esac
+
+# Consolidate base and profile-specific flags into a single string.
+# This string will be passed to `make` to override the default CFLAGS.
+cflags=("${base_cflags[@]}" "${profile_cflags[@]}")
+
+# Determine the output directory for this build profile.
+out_dir="build/${profile}"
+mkdir -p "${out_dir}"
+
+# ---
+# Build Execution
+# ---
+
+echo "[xv6] Building with '${profile}' profile..." >&2
+
+# Start with a clean slate to prevent stale object files from interfering.
+# The redirection to /dev/null silences the output.
 make clean >/dev/null
 
-# Invoke make with the chosen profile flags. We append to existing CFLAGS
-# from the Makefile to preserve essential options like -m32 and -Wall.
-make -j"$(nproc)" "CFLAGS+=${CFLAGS_PROFILE}"
+# Invoke the main Makefile, passing the combined CFLAGS and any
+# additional user-provided arguments.
+make CFLAGS="${cflags[*]}" "$@"
+
+# ---
+# Post-Build Artifact Handling
+# ---
+
+echo "[xv6] Moving build artifacts to '${out_dir}'..." >&2
+
+# A list of key build products to be collected.
+artefacts=(
+  bootblock bootother kernel kernelmemfs xv6.img xv6memfs.img fs.img
+  kernel.asm kernel.sym kernelmemfs.asm kernelmemfs.sym mkfs
+)
+
+# Move each artifact to the designated output directory.
+# The -e check ensures that we only try to move existing files.
+for a in "${artefacts[@]}"; do
+  if [[ -e "$a" ]]; then
+    mv "$a" "${out_dir}/"
+  fi
+done
+
+# Perform a final clean-up to remove intermediate object files,
+# keeping the main source directory clean.
+make clean >/dev/null
+
+echo "[xv6] Build completed. Artifacts are located in '${out_dir}'." >&2

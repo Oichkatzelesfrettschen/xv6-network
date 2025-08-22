@@ -4,7 +4,7 @@
 #include "../net/net.h"
 #include "ne.h"
 
-// Notes: the numbers (keywords) in comments refer to pages in the DP8390 specification.
+// Notes: The numbers (keywords) in comments refer to pages in the DP8390 specification.
 // DP8390 Documents: http://www.national.com/ds/DP/DP8390D.pdf
 
 /*
@@ -20,6 +20,7 @@
 int ne_probe(ne_t* ne) {
     uchar eprom[32];
     int reg0;
+    int i;
 
     // Check for a valid base I/O port.
     reg0 = inb(ne->base);
@@ -45,7 +46,7 @@ int ne_probe(ne_t* ne) {
 
     // Reset the board by pulsing the reset port.
     outb(ne->base + NE_RESET, inb(ne->base + NE_RESET));
-    int i = 0;
+    i = 0;
     while (!(inb(ne->base + DP_ISR) & ISR_RST)) {
         if (i++ > 10000) {
             cprintf("%s: NIC reset failure\n", ne->name);
@@ -148,7 +149,7 @@ void ne_init(ne_t* ne) {
     for (i = 0; i < 6; ++i) {
         cprintf("%x%s", ne->address[i], i < 5 ? ":" : "\n");
     }
-    
+
     // Basic initialization sequence for the DP8390.
     struct {
         uchar offset, value;
@@ -204,13 +205,13 @@ void ne_rdma_setup(ne_t* ne, int mode, ushort addr, int size) {
             newcrda = inb(ne->base + DP_CRDA0) | (inb(ne->base + DP_CRDA1) << 8);
         } while (oldcrda == newcrda);
     }
-    
+
     // Configure remote DMA registers.
     outb(ne->base + DP_RSAR0, addr & 0xFF);
     outb(ne->base + DP_RSAR1, (addr >> 8) & 0xFF);
     outb(ne->base + DP_RBCR0, size & 0xFF);
     outb(ne->base + DP_RBCR1, (size >> 8) & 0xFF);
-    
+
     // Start the transfer.
     outb(ne->base + DP_CR, mode | CR_PS_P0 | CR_STA);
 }
@@ -264,7 +265,7 @@ void ne_start_xmit(ne_t* ne, int page, int size) {
  */
 int ne_pio_write(ne_t* ne, uchar* packet, int size) {
     int q = ne->sendq_head % SENDQ_LEN;
-    
+
     // Check for a free send buffer slot.
     if (ne->sendq[q].filled || ne->sendq_head > ne->sendq_tail) {
         cprintf("%s: all transmitting buffers in NIC are busy.\n", ne->name);
@@ -285,7 +286,7 @@ int ne_pio_write(ne_t* ne, uchar* packet, int size) {
 
     // Advance the send queue head.
     ne->sendq_head++;
-    
+
     return size;
 }
 
@@ -315,11 +316,11 @@ int ne_pio_read(ne_t* ne, uchar* buf, int bufsize) {
     // Switch to page 1 to read the CURR pointer.
     outb(ne->base + DP_CR, CR_PS_P1);
     curr = inb(ne->base + DP_CURR);
-    
+
     // Switch back to page 0 to read the BNRY pointer.
     outb(ne->base + DP_CR, CR_PS_P0 | CR_NO_DMA | CR_STA);
     bnry = inb(ne->base + DP_BNRY);
-    
+
     // The next packet to read is at the page following BNRY.
     page = bnry + 1;
     if (page == ne->recv_stoppage) {
@@ -336,7 +337,7 @@ int ne_pio_read(ne_t* ne, uchar* buf, int bufsize) {
     // Read the 4-byte header of the next packet.
     ne_getblock(ne, page * DP_PAGESIZE, sizeof(header), &header);
     pktsize = (header.rbc0 | (header.rbc1 << 8)) - sizeof(header);
-    
+
     // Validate packet size and status.
     if (pktsize < ETH_MIN_SIZE || pktsize > ETH_MAX_SIZE || (header.status & RSR_PRX) == 0) {
         cprintf("%s: Bad packet (size: %d, status: 0x%x)\n", ne->name, pktsize, header.status);
@@ -383,7 +384,7 @@ void ne_interrupt(ne_t* ne) {
     while ((isr = inb(ne->base + DP_ISR)) != 0) {
         // Acknowledge the interrupt by writing back the ISR value.
         outb(ne->base + DP_ISR, isr);
-        
+
         if (isr & ISR_PTX) {
             // Packet Transmit (PTX) interrupt.
             ne->sendq_tail++;

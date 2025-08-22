@@ -1,21 +1,21 @@
 
 h1. Xv6 with Network
 
-h2. Abstruct
+h2. Abstract
 
-This project will be the implementation of a network in xv6. Supported NIC will be NE2000. This implement referes to MINIX.
+This project aims to implement a network in xv6. The supported NIC will be the NE2000. This implementation refers to MINIX.
 
-These source codes are licensed under the MIT License. See the LICENSE file for details.
+These source codes are licensed under the BSD 3-Clause License. See the LICENSE file for details.
 
 h2. Change Log
 
 h3. 20110902
 
-I can get the ethernet address (MAC address) of some known ports.
+I can obtain the Ethernet address (MAC address) of some known ports.
 
 h3. 20110908
 
-Executing "ethtest", I can see sent DHCP/BOOTP packets with 'tcpdump'. But I never see interrupts from NIC, so I will check the driver source.
+Executing "ethtest", I can see DHCP/BOOTP packets being sent with 'tcpdump'. However, I never see interrupts from the NIC, so I will check the driver source.
 
 h4. Environment:
 
@@ -33,22 +33,22 @@ h4. Note:
 
 * The local DHCP server on VirtualBox is located at '10.0.2.2'.
 * The MAC address '52:54:00:12:34:56' is the default address in QEMU, so I use it in BOCHS (see '.bochsrc').
-* BOCHS output an IRQ conflict message but I ignore it now. 
+* BOCHS outputs an IRQ conflict message, but I ignore it for now. 
 
 h3. 20110915
 
-I simply rewrite all files under "eth/" to 4 files and implement some TCP/IP protocol stack(Ethernet, IP, UDP, and DHCP), so interrupts occur and an IP address is got by DHCP in -both QEMU and- BOCHS. The IRQ number switches to 10 for IRQ conflicting in BOCHS. '.bochsrc' need to be changed about the ne2k setting.
+I rewrote all files under "eth/" into four files and implemented parts of the TCP/IP protocol stack (Ethernet, IP, UDP, and DHCP), so interrupts occur and an IP address is obtained by DHCP in -both QEMU and- BOCHS. The IRQ number switches to 10 to avoid IRQ conflicts in BOCHS. '.bochsrc' needs to be changed for the ne2k setting.
 
 h4. Note:
 
-* The implement don't work by building in cygwin(Why...?).
-** Building in linux(Ubuntu) work on qemu in both linux and cygwin.
+* The implementation doesn't work when built in Cygwin (why...?).
+** Building in Linux (Ubuntu) works on QEMU in both Linux and Cygwin.
 * (APPEND) Interrupts don't occur in QEMU...
 
 h4. ToDo:
 
-* Continue to implement driver programs
-* Implement TCP/IP protocol stack.
+* Continue implementing driver programs.
+* Implement the TCP/IP protocol stack.
 ** Need IPC for passing packets to processes by port?
 
 h3. 20110919
