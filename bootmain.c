@@ -11,10 +11,14 @@
 
 #define SECTSIZE  512
 
-void readseg(uchar*, uint, uint);
+// Forward declarations for internal helpers
+static void waitdisk(void);
+static void readsect(void *dst, uint offset);
+static void readseg(uchar *va, uint count, uint offset);
+void bootmain(void);
 
-void
-bootmain(void)
+// Entry point invoked from bootasm.S
+void bootmain(void)
 {
   struct elfhdr *elf;
   struct proghdr *ph, *eph;
@@ -46,7 +50,7 @@ bootmain(void)
   entry();
 }
 
-void
+static void
 waitdisk(void)
 {
   // Wait for disk ready.
@@ -55,7 +59,7 @@ waitdisk(void)
 }
 
 // Read a single sector at offset into dst.
-void
+static void
 readsect(void *dst, uint offset)
 {
   // Issue command.
@@ -74,7 +78,7 @@ readsect(void *dst, uint offset)
 
 // Read 'count' bytes at 'offset' from kernel into virtual address 'va'.
 // Might copy more than asked.
-void
+static void
 readseg(uchar* va, uint count, uint offset)
 {
   uchar* eva;

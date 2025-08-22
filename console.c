@@ -218,7 +218,7 @@ consoleintr(int (*getc)(void))
   release(&input.lock);
 }
 
-int
+static int
 consoleread(struct inode *ip, char *dst, int n)
 {
   uint target;
@@ -256,7 +256,7 @@ consoleread(struct inode *ip, char *dst, int n)
   return target - n;
 }
 
-int
+static int
 consolewrite(struct inode *ip, char *buf, int n)
 {
   int i;

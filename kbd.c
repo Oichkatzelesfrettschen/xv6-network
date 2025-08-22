@@ -3,7 +3,7 @@
 #include "defs.h"
 #include "kbd.h"
 
-int
+static int
 kbdgetc(void)
 {
   static uint shift;

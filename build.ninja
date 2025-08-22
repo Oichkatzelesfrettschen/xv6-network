@@ -5,6 +5,7 @@
 # tuning of the boot code.
 
 # Baseline flags shared across profiles, mirroring the historical Makefile.
+# Additional warning flags can be appended via make variables if desired.
 base_flags = -fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -m32 -Werror -fno-stack-protector -Wa,--noexecstack
 
 # Profile-specific tuning. Choose via the target name.

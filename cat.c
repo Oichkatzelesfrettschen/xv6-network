@@ -4,8 +4,7 @@
 
 char buf[512];
 
-void
-cat(int fd)
+static void cat(int fd)
 {
   int n;
 

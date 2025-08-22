@@ -1,5 +1,6 @@
 #include "types.h"
 #include "x86.h"
+#include "defs.h"  // for memory/string routine prototypes
 
 void*
 memset(void *dst, int c, uint n)
@@ -42,13 +43,6 @@ memmove(void *dst, const void *src, uint n)
       *d++ = *s++;
 
   return dst;
-}
-
-// memcpy exists to placate GCC.  Use memmove.
-void*
-memcpy(void *dst, const void *src, uint n)
-{
-  return memmove(dst, src, n);
 }
 
 int

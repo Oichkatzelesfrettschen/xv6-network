@@ -5,9 +5,9 @@
 #include "user.h"
 
 char buf[1024];
-int match(char*, char*);
+static int match(char*, char*);
 
-void
+static void
 grep(char *pattern, int fd)
 {
   int n, m;
@@ -65,10 +65,10 @@ main(int argc, char *argv[])
 // Regexp matcher from Kernighan & Pike,
 // The Practice of Programming, Chapter 9.
 
-int matchhere(char*, char*);
-int matchstar(int, char*, char*);
+static int matchhere(char*, char*);
+static int matchstar(int, char*, char*);
 
-int
+static int
 match(char *re, char *text)
 {
   if(re[0] == '^')
@@ -81,7 +81,7 @@ match(char *re, char *text)
 }
 
 // matchhere: search for re at beginning of text
-int matchhere(char *re, char *text)
+static int matchhere(char *re, char *text)
 {
   if(re[0] == '\0')
     return 1;
@@ -95,7 +95,7 @@ int matchhere(char *re, char *text)
 }
 
 // matchstar: search for c*re at beginning of text
-int matchstar(int c, char *re, char *text)
+static int matchstar(int c, char *re, char *text)
 {
   do{  // a * matches zero or more instances
     if(matchhere(re, text))

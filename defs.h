@@ -6,6 +6,7 @@ struct pipe;
 struct proc;
 struct spinlock;
 struct stat;
+struct trapframe;
 
 // bio.c
 void            binit(void);
@@ -133,6 +134,32 @@ int             strlen(const char*);
 int             strncmp(const char*, const char*, uint);
 char*           strncpy(char*, const char*, int);
 
+// sysfile.c
+int             sys_dup(void);
+int             sys_read(void);
+int             sys_write(void);
+int             sys_close(void);
+int             sys_fstat(void);
+int             sys_link(void);
+int             sys_unlink(void);
+int             sys_open(void);
+int             sys_mkdir(void);
+int             sys_mknod(void);
+int             sys_chdir(void);
+int             sys_exec(void);
+int             sys_pipe(void);
+int             sys_ioctl(void);
+
+// sysproc.c
+int             sys_fork(void);
+int             sys_exit(void);
+int             sys_wait(void);
+int             sys_kill(void);
+int             sys_getpid(void);
+int             sys_sbrk(void);
+int             sys_sleep(void);
+int             sys_uptime(void);
+
 // syscall.c
 int             argint(int, int*);
 int             argptr(int, char**, int);
@@ -148,6 +175,7 @@ void            timerinit(void);
 void            idtinit(void);
 extern uint     ticks;
 void            tvinit(void);
+void            trap(struct trapframe*);
 extern struct spinlock tickslock;
 
 // uart.c

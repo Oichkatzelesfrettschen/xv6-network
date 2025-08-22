@@ -167,7 +167,7 @@
 // SENDQ_PAGES * SENDQ_LEN ページを送信バッファとして利用する
 #define SENDQ_LEN       2
 
-typedef void(*ne_callback_t)();
+typedef void (*ne_callback_t)(void);
 
 typedef struct {
   char name[8];        // 適当な名前

@@ -9,7 +9,7 @@
 static ne_t ne;
 
 void
-ethintr()
+ethintr(void)
 {
   ne_interrupt(&ne);
   return;
@@ -17,7 +17,7 @@ ethintr()
 
 // Handle Ethernet-specific ioctl() requests.
 // At present only ETH_IPC_SETUP is recognized, which remains unimplemented.
-int
+static int
 ethioctl(struct inode* ip, int request, void* p)
 {
   switch (request) {
@@ -28,20 +28,20 @@ ethioctl(struct inode* ip, int request, void* p)
   return 0;
 }
 
-int
+static int
 ethread(struct inode* ip, char* p, int n)
 {
   return ne_pio_read(&ne, (uchar*)p, n);
 }
 
-int
+static int
 ethwrite(struct inode* ip, char* p, int n)
 {
   return ne_pio_write(&ne, (uchar*)p, n);
 }
 
 void
-ethinit()
+ethinit(void)
 {
   int i;
   char name[] = "eth#";

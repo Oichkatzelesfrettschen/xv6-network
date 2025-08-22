@@ -1,5 +1,7 @@
-// On-disk file system format. 
+// On-disk file system format.
 // Both the kernel and user programs use this header file.
+
+#include "types.h"
 
 // Block 0 is unused.
 // Block 1 is super block.
