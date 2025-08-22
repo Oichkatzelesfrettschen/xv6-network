@@ -31,19 +31,22 @@ idtinit(void)
   lidt(idt, sizeof(idt));
 }
 
-void
-trap(struct trapframe *tf)
+// Handle system calls originating from user space.
+static void
+handle_syscall(struct trapframe *tf)
 {
-  if(tf->trapno == T_SYSCALL){
-    if(proc->killed)
-      exit();
-    proc->tf = tf;
-    syscall();
-    if(proc->killed)
-      exit();
-    return;
-  }
+  if(proc->killed)
+    exit();
+  proc->tf = tf;
+  syscall();
+  if(proc->killed)
+    exit();
+}
 
+// Dispatch hardware device interrupts.  Returns 1 if the trap was handled.
+static int
+handle_device_interrupt(struct trapframe *tf)
+{
   switch(tf->trapno){
   case T_IRQ0 + IRQ_TIMER:
     if(cpu->id == 0){
@@ -53,50 +56,67 @@ trap(struct trapframe *tf)
       release(&tickslock);
     }
     lapiceoi();
-    break;
+    return 1;
   case T_IRQ0 + IRQ_IDE:
     ideintr();
     lapiceoi();
-    break;
+    return 1;
   case T_IRQ0 + IRQ_IDE+1:
     // Bochs generates spurious IDE1 interrupts.
-    break;
+    return 1;
   case T_IRQ0 + IRQ_KBD:
     kbdintr();
     lapiceoi();
-    break;
+    return 1;
   case T_IRQ0 + IRQ_COM1:
     uartintr();
     lapiceoi();
-    break;
+    return 1;
   case T_IRQ0 + IRQ_ETH:
     ethintr();
     lapiceoi();
-    break;
+    return 1;
   case T_IRQ0 + 7:
   case T_IRQ0 + IRQ_SPURIOUS:
     cprintf("cpu%d: spurious interrupt at %x:%x\n",
             cpu->id, tf->cs, tf->eip);
     lapiceoi();
-    break;
-   
+    return 1;
   default:
-    if(proc == 0 || (tf->cs&3) == 0){
-      // In kernel, it must be our mistake.
-      cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
-              tf->trapno, cpu->id, tf->eip, rcr2());
-      panic("trap");
-    }
-    // In user space, assume process misbehaved.
-    cprintf("pid %d %s: trap %d err %d on cpu %d "
-            "eip 0x%x addr 0x%x--kill proc\n",
-            proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
-            rcr2());
-    proc->killed = 1;
+    return 0;
+  }
+}
+
+// Manage traps that are neither system calls nor known device interrupts.
+static void
+handle_unexpected_trap(struct trapframe *tf)
+{
+  if(proc == 0 || (tf->cs&3) == 0){
+    // In kernel, it must be our mistake.
+    cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
+            tf->trapno, cpu->id, tf->eip, rcr2());
+    panic("trap");
+  }
+  // In user space, assume process misbehaved.
+  cprintf("pid %d %s: trap %d err %d on cpu %d eip 0x%x addr 0x%x--kill proc\n",
+          proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip,
+          rcr2());
+  proc->killed = 1;
+}
+
+void
+trap(struct trapframe *tf)
+{
+  if(tf->trapno == T_SYSCALL){
+    handle_syscall(tf);
+    return;
   }
 
+  if(!handle_device_interrupt(tf))
+    handle_unexpected_trap(tf);
+
   // Force process exit if it has been killed and is in user space.
-  // (If it is still executing in the kernel, let it keep running 
+  // (If it is still executing in the kernel, let it keep running
   // until it gets to the regular system call return.)
   if(proc && proc->killed && (tf->cs&3) == DPL_USER)
     exit();

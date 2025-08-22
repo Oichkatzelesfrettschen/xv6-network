@@ -53,7 +53,8 @@ bzero(int dev, int bno)
 static uint
 balloc(uint dev)
 {
-  int b, bi, m;
+  uint b;      // Block index as unsigned to match superblock fields
+  int bi, m;
   struct buf *bp;
   struct superblock sb;
 
@@ -146,7 +147,7 @@ static struct inode* iget(uint dev, uint inum);
 struct inode*
 ialloc(uint dev, short type)
 {
-  int inum;
+  uint inum;   // Inode number tracked as unsigned to align with sb.ninodes
   struct buf *bp;
   struct dinode *dip;
   struct superblock sb;
@@ -352,7 +353,8 @@ bmap(struct inode *ip, uint bn)
 static void
 itrunc(struct inode *ip)
 {
-  int i, j;
+  int i;
+  uint j;      // Use unsigned index to iterate over NINDIRECT entries
   struct buf *bp;
   uint *a;
 
@@ -496,7 +498,7 @@ dirlookup(struct inode *dp, char *name, uint *poff)
 int
 dirlink(struct inode *dp, char *name, uint inum)
 {
-  int off;
+  uint off;    // Offset within directory sized consistently with dp->size
   struct dirent de;
   struct inode *ip;
 

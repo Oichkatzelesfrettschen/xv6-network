@@ -148,10 +148,10 @@ bad:
 static int
 isdirempty(struct inode *dp)
 {
-  int off;
+  uint off;  // Offset within directory treated as unsigned to match size field
   struct dirent de;
 
-  for(off=2*sizeof(de); off<dp->size; off+=sizeof(de)){
+  for(off = 2*sizeof(de); off < dp->size; off += sizeof(de)){
     if(readi(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
       panic("isdirempty: readi");
     if(de.inum != 0)
@@ -351,8 +351,8 @@ sys_exec(void)
     return -1;
   }
   memset(argv, 0, sizeof(argv));
-  for(i=0;; i++){
-    if(i >= NELEM(argv))
+  for(i = 0;; i++){
+    if((uint)i >= NELEM(argv))
       return -1;
     if(fetchint(proc, uargv+4*i, (int*)&uarg) < 0)
       return -1;

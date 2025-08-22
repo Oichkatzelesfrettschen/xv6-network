@@ -221,7 +221,9 @@ consoleintr(int (*getc)(void))
 int
 consoleread(struct inode *ip, char *dst, int n)
 {
-  uint target;
+  // Track the desired byte count using the same signedness as `n`
+  // to prevent sign-comparison mismatches under heightened warnings.
+  int target;
   int c;
 
   iunlock(ip);
