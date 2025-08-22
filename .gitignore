@@ -45,6 +45,7 @@ cscope.*
 build*/
 build/
 builds/
+build/
 */CMakeFiles/
 
 
