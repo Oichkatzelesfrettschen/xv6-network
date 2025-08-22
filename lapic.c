@@ -127,6 +127,8 @@ lapiceoi(void)
 void
 microdelay(int us)
 {
+  // Parameter is unused on this platform; cast suppresses warning under -Wextra.
+  (void)us;
 }
 
 #define IO_RTC  0x70

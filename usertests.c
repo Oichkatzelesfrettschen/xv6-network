@@ -95,7 +95,7 @@ writetest1(void)
     exit();
   }
 
-  for(i = 0; i < MAXFILE; i++){
+  for(i = 0; (uint)i < MAXFILE; i++){
     ((int*)buf)[0] = i;
     if(write(fd, buf, 512) != 512){
       printf(stdout, "error: write big file failed\n", i);
@@ -236,7 +236,7 @@ pipe1(void)
       }
       total += n;
       cc = cc * 2;
-      if(cc > sizeof(buf))
+      if(cc > (int)sizeof(buf))
         cc = sizeof(buf);
     }
     if(total != 5 * 1033)
@@ -389,7 +389,7 @@ sharedfd(void)
   }
   nc = np = 0;
   while((n = read(fd, buf, sizeof(buf))) > 0){
-    for(i = 0; i < sizeof(buf); i++){
+    for(i = 0; i < (int)sizeof(buf); i++){
       if(buf[i] == 'c')
         nc++;
       if(buf[i] == 'p')
@@ -699,7 +699,7 @@ concreate(void)
       continue;
     if(de.name[0] == 'C' && de.name[2] == '\0'){
       i = de.name[1] - '0';
-      if(i < 0 || i >= sizeof(fa)){
+      if(i < 0 || (uint)i >= sizeof(fa)){
         printf(1, "concreate weird file %s\n", de.name);
         exit();
       }
@@ -784,17 +784,13 @@ bigdir(void)
   printf(1, "bigdir ok\n");
 }
 
-static void
-subdir_dir_setup(void)
+void
+subdir(void)
 {
-  int fd;
+  int fd, cc;
 
-  /*
-   * Create the directory hierarchy used by the subdirectory tests.
-   * Layout after this function:
-   *   dd/ff       - regular file containing "ff"
-   *   dd/dd/ff    - regular file containing "FF"
-   */
+  printf(1, "subdir test\n");
+
   unlink("ff");
   if(mkdir("dd") != 0){
     printf(1, "subdir mkdir dd failed\n");
@@ -808,7 +804,7 @@ subdir_dir_setup(void)
   }
   write(fd, "ff", 2);
   close(fd);
-
+  
   if(unlink("dd") >= 0){
     printf(1, "unlink dd (non-empty dir) succeeded!\n");
     exit();
@@ -826,14 +822,7 @@ subdir_dir_setup(void)
   }
   write(fd, "FF", 2);
   close(fd);
-}
 
-static void
-subdir_path_tests(void)
-{
-  int fd, cc;
-
-  /* Verify that relative paths traverse the hierarchy correctly. */
   fd = open("dd/dd/../ff", 0);
   if(fd < 0){
     printf(1, "open dd/dd/../ff failed\n");
@@ -846,11 +835,11 @@ subdir_path_tests(void)
   }
   close(fd);
 
-  /* Create a hard link and verify removal of the original. */
   if(link("dd/dd/ff", "dd/dd/ffff") != 0){
     printf(1, "link dd/dd/ff dd/dd/ffff failed\n");
     exit();
   }
+
   if(unlink("dd/dd/ff") != 0){
     printf(1, "unlink dd/dd/ff failed\n");
     exit();
@@ -860,12 +849,20 @@ subdir_path_tests(void)
     exit();
   }
 
-  /* Miscellaneous path resolution exercises. */
-  if(chdir("dd") != 0 ||
-     chdir("dd/../../dd") != 0 ||
-     chdir("dd/../../../dd") != 0 ||
-     chdir("./..") != 0){
-    printf(1, "chdir test failed\n");
+  if(chdir("dd") != 0){
+    printf(1, "chdir dd failed\n");
+    exit();
+  }
+  if(chdir("dd/../../dd") != 0){
+    printf(1, "chdir dd/../../dd failed\n");
+    exit();
+  }
+  if(chdir("dd/../../../dd") != 0){
+    printf(1, "chdir dd/../../dd failed\n");
+    exit();
+  }
+  if(chdir("./..") != 0){
+    printf(1, "chdir ./.. failed\n");
     exit();
   }
 
@@ -885,47 +882,67 @@ subdir_path_tests(void)
     exit();
   }
 
-  /* These operations should all fail due to various path errors. */
-  if(open("dd/ff/ff", O_CREATE|O_RDWR) >= 0 ||
-     open("dd/xx/ff", O_CREATE|O_RDWR) >= 0 ||
-     open("dd", O_CREATE) >= 0 ||
-     open("dd", O_RDWR) >= 0 ||
-     open("dd", O_WRONLY) >= 0){
-    printf(1, "unexpected create/open success\n");
+  if(open("dd/ff/ff", O_CREATE|O_RDWR) >= 0){
+    printf(1, "create dd/ff/ff succeeded!\n");
+    exit();
+  }
+  if(open("dd/xx/ff", O_CREATE|O_RDWR) >= 0){
+    printf(1, "create dd/xx/ff succeeded!\n");
+    exit();
+  }
+  if(open("dd", O_CREATE) >= 0){
+    printf(1, "create dd succeeded!\n");
+    exit();
+  }
+  if(open("dd", O_RDWR) >= 0){
+    printf(1, "open dd rdwr succeeded!\n");
+    exit();
+  }
+  if(open("dd", O_WRONLY) >= 0){
+    printf(1, "open dd wronly succeeded!\n");
+    exit();
+  }
+  if(link("dd/ff/ff", "dd/dd/xx") == 0){
+    printf(1, "link dd/ff/ff dd/dd/xx succeeded!\n");
+    exit();
+  }
+  if(link("dd/xx/ff", "dd/dd/xx") == 0){
+    printf(1, "link dd/xx/ff dd/dd/xx succeeded!\n");
+    exit();
+  }
+  if(link("dd/ff", "dd/dd/ffff") == 0){
+    printf(1, "link dd/ff dd/dd/ffff succeeded!\n");
+    exit();
+  }
+  if(mkdir("dd/ff/ff") == 0){
+    printf(1, "mkdir dd/ff/ff succeeded!\n");
+    exit();
+  }
+  if(mkdir("dd/xx/ff") == 0){
+    printf(1, "mkdir dd/xx/ff succeeded!\n");
+    exit();
+  }
+  if(mkdir("dd/dd/ffff") == 0){
+    printf(1, "mkdir dd/dd/ffff succeeded!\n");
+    exit();
+  }
+  if(unlink("dd/xx/ff") == 0){
+    printf(1, "unlink dd/xx/ff succeeded!\n");
+    exit();
+  }
+  if(unlink("dd/ff/ff") == 0){
+    printf(1, "unlink dd/ff/ff succeeded!\n");
+    exit();
+  }
+  if(chdir("dd/ff") == 0){
+    printf(1, "chdir dd/ff succeeded!\n");
+    exit();
+  }
+  if(chdir("dd/xx") == 0){
+    printf(1, "chdir dd/xx succeeded!\n");
     exit();
   }
 
-  if(link("dd/ff/ff", "dd/dd/xx") == 0 ||
-     link("dd/xx/ff", "dd/dd/xx") == 0 ||
-     link("dd/ff", "dd/dd/ffff") == 0){
-    printf(1, "unexpected link success\n");
-    exit();
-  }
-
-  if(mkdir("dd/ff/ff") == 0 ||
-     mkdir("dd/xx/ff") == 0 ||
-     mkdir("dd/dd/ffff") == 0){
-    printf(1, "unexpected mkdir success\n");
-    exit();
-  }
-
-  if(unlink("dd/xx/ff") == 0 ||
-     unlink("dd/ff/ff") == 0){
-    printf(1, "unexpected unlink success\n");
-    exit();
-  }
-
-  if(chdir("dd/ff") == 0 ||
-     chdir("dd/xx") == 0){
-    printf(1, "unexpected chdir success\n");
-    exit();
-  }
-}
-
-static void
-subdir_cleanup(void)
-{
-  /* Remove the files and directories created during the test. */
   if(unlink("dd/dd/ffff") != 0){
     printf(1, "unlink dd/dd/ff failed\n");
     exit();
@@ -946,15 +963,7 @@ subdir_cleanup(void)
     printf(1, "unlink dd failed\n");
     exit();
   }
-}
 
-void
-subdir(void)
-{
-  printf(1, "subdir test\n");
-  subdir_dir_setup();
-  subdir_path_tests();
-  subdir_cleanup();
   printf(1, "subdir ok\n");
 }
 
@@ -1335,7 +1344,7 @@ sbrktest(void)
     printf(1, "pipe() failed\n");
     exit();
   }
-  for(i = 0; i < sizeof(pids)/sizeof(pids[0]); i++){
+  for(i = 0; i < (int)(sizeof(pids)/sizeof(pids[0])); i++){
     if((pids[i] = fork()) == 0){
       // allocate the full 640K
       sbrk((640 * 1024) - (uint)sbrk(0));
@@ -1349,7 +1358,7 @@ sbrktest(void)
   // if those failed allocations freed up the pages they did allocate,
   // we'll be able to allocate here
   c = sbrk(4096);
-  for(i = 0; i < sizeof(pids)/sizeof(pids[0]); i++){
+  for(i = 0; i < (int)(sizeof(pids)/sizeof(pids[0])); i++){
     if(pids[i] == -1)
       continue;
     kill(pids[i]);
@@ -1417,7 +1426,7 @@ bsstest(void)
   int i;
 
   printf(stdout, "bss test\n");
-  for(i = 0; i < sizeof(uninit); i++){
+  for(i = 0; i < (int)sizeof(uninit); i++){
     if(uninit[i] != '\0'){
       printf(stdout, "bss test failed\n");
       exit();
@@ -1453,6 +1462,8 @@ bigargtest(void)
 int
 main(int argc, char *argv[])
 {
+  (void)argc;
+  (void)argv;
   printf(1, "usertests starting\n");
 
   if(open("usertests.ran", 0) >= 0){
