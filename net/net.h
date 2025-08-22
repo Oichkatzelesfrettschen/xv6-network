@@ -6,11 +6,21 @@ typedef unsigned short u16_t;
 typedef unsigned int   u32_t;
 
 //-----------------------------------------
-
-#define HTONS(x) (((x >> 8) & 0xFF) | ((x & 0xFF) << 8))
-#define HTONL(x)                                \
-  (((x >> 24) & 0xFFL) | ((x >> 8) & 0xFF00L) | \
-   ((x << 8) & 0xFF0000L) | ((x << 24) & 0xFF000000L))
+/*
+ * Host-to-network byte-order conversion macros.
+ *
+ * Each argument is cast to a fixed-width unsigned type and wrapped in
+ * parentheses to avoid unintended side effects. Note that the argument
+ * expression is evaluated multiple times; callers must therefore avoid
+ * passing expressions with side effects.
+ */
+#define HTONS(x)                                                       \
+  ((u16_t)((((u16_t)(x)) >> 8) | (((u16_t)(x)) << 8)))
+#define HTONL(x)                                                       \
+  ((u32_t)(((((u32_t)(x)) >> 24) & 0x000000FFUL) |             \
+           ((((u32_t)(x)) >> 8) & 0x0000FF00UL) |              \
+           ((((u32_t)(x)) << 8) & 0x00FF0000UL) |              \
+           ((((u32_t)(x)) << 24) & 0xFF000000UL)))
 #define NTOHS(x) HTONS(x)
 #define NTOHL(x) HTONL(x)
 

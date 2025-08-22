@@ -1,5 +1,5 @@
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
-Version 6 (v6).  xv6 loosely follows the structure and style of v6,
+Version 6 (v6). xv6 loosely follows the structure and style of v6,
 but is implemented for a modern x86-based multiprocessor using ANSI C.
 
 ACKNOWLEDGMENTS
@@ -31,15 +31,26 @@ Copyright 2006-2007 Frans Kaashoek, Robert Morris, and Russ Cox.
 ERROR REPORTS
 
 If you spot errors or have suggestions for improvement, please send
-email to Frans Kaashoek and Robert Morris (kaashoek,rtm@csail.mit.edu). 
+email to Frans Kaashoek and Robert Morris (kaashoek,rtm@csail.mit.edu).
 
 BUILDING AND RUNNING XV6
 
 To build xv6 on an x86 ELF machine (like Linux or FreeBSD), run "make".
 On non-x86 or non-ELF machines (like OS X, even on x86), you will
 need to install a cross-compiler gcc suite capable of producing x86 ELF
-binaries.  See http://pdos.csail.mit.edu/6.828/2007/tools.html.
+binaries. See http://pdos.csail.mit.edu/6.828/2007/tools.html.
 Then run "make TOOLPREFIX=i386-jos-elf-".
+
+Alternatively, a convenience script `build.sh` provides curated
+optimization profiles and encapsulates common build steps. Example
+invocations are shown below:
+
+    ./build.sh --profile=developer   # debug-oriented build with symbols
+    ./build.sh --profile=performance # maximal optimizations for benchmarking
+    ./build.sh --profile=release     # production build with assertions removed
+
+The script cleans the tree before compilation and parallelizes the
+build using all available processors.
 
 To run xv6, you can use Bochs or QEMU, both PC simulators.
 Bochs makes debugging easier, but QEMU is much faster.
@@ -48,30 +59,30 @@ To run in QEMU, run "make qemu".
 
 NETWORKING AND THE NE2000 DRIVER
 --------------------------------
-This tree integrates an NE2000-compatible network interface driver.  The
+This tree integrates an NE2000-compatible network interface driver. The
 driver is built along with the kernel and requires a compiler capable of
-producing 32-bit x86 *ELF* binaries.  On machines where the native toolchain
+producing 32-bit x86 *ELF* binaries. On machines where the native toolchain
 cannot emit such binaries, install the `i386-jos-elf` cross compiler and set
 `TOOLPREFIX=i386-jos-elf-` when invoking `make`.
 
 Installing the cross toolchain
 ------------------------------
 The cross compiler used by xv6 originates from the MIT 6.828 teaching
-material.  A typical Unix-like host can install it as follows:
+material. A typical Unix-like host can install it as follows:
 
 1. **Fetch and build the toolchain**
 
-       git clone https://github.com/mit-pdos/gnu-toolchain.git
-       cd gnu-toolchain
-       ./configure --target=i386-jos-elf --prefix=$HOME/opt/cross
-       make && make install
+        git clone https://github.com/mit-pdos/gnu-toolchain.git
+        cd gnu-toolchain
+        ./configure --target=i386-jos-elf --prefix=$HOME/opt/cross
+        make && make install
 
 2. **Expose the binaries**
 
-       export PATH=$HOME/opt/cross/bin:$PATH
+        export PATH=$HOME/opt/cross/bin:$PATH
 
 After installation, running `i386-jos-elf-gcc --version` should display the
-cross compiler.  Subsequent builds can then use
+cross compiler. Subsequent builds can then use
 
     make TOOLPREFIX=i386-jos-elf-
 
@@ -82,9 +93,12 @@ Running QEMU with networking
     make qemu    # -net nic,model=ne2k_pci,macaddr=52:54:00:12:34:56 -net user
 
 The Makefile also provides an ISA variant using `make qemu-isa`, which emulates
-an ISA NE2000 card.  Adjust `QEMUOPTS` in the Makefile to employ alternative
+an ISA NE2000 card. Adjust `QEMUOPTS` in the Makefile to employ alternative
 network back ends such as TAP or bridging for experiments requiring a real
 network.
 
-To create a typeset version of the code, run "make xv6.pdf".  This
-requires the "mpage" utility.  See http://www.mesa.nl/pub/mpage/.
+BUILD PROFILES
+
+For repeatable builds the repository ships with a small helper script,
+`build.sh`, which wraps `make` and provides optimized compiler flag sets
+tailored to typical development stages:

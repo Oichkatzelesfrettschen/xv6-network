@@ -150,7 +150,7 @@ fork(void)
     if(proc->ofile[i])
       np->ofile[i] = filedup(proc->ofile[i]);
   np->cwd = idup(proc->cwd);
- 
+  
   pid = np->pid;
   np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
@@ -245,11 +245,11 @@ wait(void)
 
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
-// Scheduler never returns.  It loops, doing:
+// Scheduler never returns. It loops, doing:
 //  - choose a process to run
 //  - swtch to start running that process
 //  - eventually that process transfers control
-//      via swtch back to the scheduler.
+//    via swtch back to the scheduler.
 void
 scheduler(void)
 {
@@ -412,12 +412,12 @@ void
 procdump(void)
 {
   static char *states[] = {
-  [UNUSED]    "unused",
-  [EMBRYO]    "embryo",
-  [SLEEPING]  "sleep ",
-  [RUNNABLE]  "runble",
-  [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie"
+  [UNUSED]   = "unused",
+  [EMBRYO]   = "embryo",
+  [SLEEPING] = "sleep ",
+  [RUNNABLE] = "runble",
+  [RUNNING]  = "run   ",
+  [ZOMBIE]   = "zombie"
   };
   int i;
   struct proc *p;
@@ -440,5 +440,3 @@ procdump(void)
     cprintf("\n");
   }
 }
-
-

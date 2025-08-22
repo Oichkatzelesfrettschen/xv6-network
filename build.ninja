@@ -1,0 +1,34 @@
+# build.ninja - Ninja entry point for xv6-network
+# This file delegates compilation to the existing Makefile while
+# providing profile-specific builds. The Makefile presently relies on
+# GCC/binutils; adapting it fully for Clang/LLD may require additional
+# tuning of the boot code.
+
+# Baseline flags shared across profiles, mirroring the historical Makefile.
+base_flags = -fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -m32 -Werror -fno-stack-protector -Wa,--noexecstack
+
+# Profile-specific tuning. Choose via the target name.
+developer_flags = -O0 -g3 -ggdb -fno-omit-frame-pointer -DDEBUG
+performance_flags = -O3 -g -fno-omit-frame-pointer -DNDEBUG
+release_flags = -O3 -s -fomit-frame-pointer -DNDEBUG
+
+rule make_clean
+  command = make clean
+  description = CLEAN
+
+rule make_build
+  command = make CFLAGS='$base_flags $cflags'
+  description = BUILD $out
+
+build clean: make_clean
+
+build developer: make_build
+  cflags = $developer_flags
+
+build performance: make_build
+  cflags = $performance_flags
+
+build release: make_build
+  cflags = $release_flags
+
+default developer
