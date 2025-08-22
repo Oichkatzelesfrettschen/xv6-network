@@ -53,8 +53,8 @@ h4. ToDo:
 
 h3. 20110919
 
-* QEMU interrupts problem is solved. In QEMU version 0.14 (after version 0.8?), the IRQ of NE2000 is 11 (but IRQ is conflicted again in BOCHS).
-* I implement 'ioctl' system call.
+* The QEMU interrupts problem is solved. In QEMU version 0.14 (after version 0.8?), the IRQ of the NE2000 is 11 (but the IRQ conflicts again in BOCHS).
+* I implemented the 'ioctl' system call.
 
 
 h2. Network Usage
