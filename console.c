@@ -221,7 +221,9 @@ consoleintr(int (*getc)(void))
 int
 consoleread(struct inode *ip, char *dst, int n)
 {
-  uint target;
+  // Track the desired byte count using the same signedness as `n`
+  // to prevent sign-comparison mismatches under heightened warnings.
+  int target;
   int c;
 
   iunlock(ip);
@@ -238,7 +240,7 @@ consoleread(struct inode *ip, char *dst, int n)
     }
     c = input.buf[input.r++ % INPUT_BUF];
     if(c == C('D')){  // EOF
-      if(n < target){
+      if((uint)n < target){
         // Save ^D for next time, to make sure
         // caller gets a 0-byte result.
         input.r--;
@@ -253,7 +255,7 @@ consoleread(struct inode *ip, char *dst, int n)
   release(&input.lock);
   ilock(ip);
 
-  return target - n;
+  return (int)(target - (uint)n);
 }
 
 int
