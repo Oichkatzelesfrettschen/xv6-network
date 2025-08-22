@@ -8,8 +8,14 @@
 #define PROM_SIGNATURE        0x57
 #define RESET_TIMEOUT_POLL_LIMIT 10000
 
+// Structure for register write sequences
+struct ne_reg_write {
+    uchar offset;
+    uchar value;
+};
+
 // Helper function to perform a sequence of register writes
-static void write_sequence(ne_t* ne, const struct { uchar offset, value; } *seq, int len);
+static void write_sequence(ne_t* ne, const struct ne_reg_write *seq, int len);
 
 // Probe the NIC and retrieve its MAC address.
 int
@@ -55,9 +61,7 @@ ne_probe(ne_t* ne)
     // Read 16 bytes from the PROM (32 bytes on the wire) using the standard
     // initialization sequence described in the datasheet.
     {
-        struct {
-            uchar offset, value;
-        } seq[] = {
+        struct ne_reg_write seq[] = {
             { DP_CR, CR_NO_DMA | CR_PS_P0 | CR_STP },
             { DP_DCR, (DCR_BMS | DCR_8BYTES) },
             { DP_RBCR0, 0x00 }, { DP_RBCR1, 0x00 },
@@ -92,7 +96,7 @@ ne_probe(ne_t* ne)
 }
 
 // A helper function to execute a series of register writes.
-static void write_sequence(ne_t* ne, const struct { uchar offset, value; } *seq, int len) {
+static void write_sequence(ne_t* ne, const struct ne_reg_write *seq, int len) {
     for (int i = 0; i < len; ++i) {
         outb(ne->base + seq[i].offset, seq[i].value);
     }
@@ -134,9 +138,7 @@ ne_init(ne_t* ne)
         cprintf("%x%s", ne->address[i], i < 5 ? ":" : "\n");
 
     {
-        struct {
-            uchar offset, value;
-        } seq[] = {
+        struct ne_reg_write seq[] = {
             { DP_CR, CR_PS_P0 | CR_STP | CR_NO_DMA },
             { DP_DCR, ((ne->is16bit ? DCR_WORDWIDE : DCR_BYTEWIDE) | DCR_LTLENDIAN | DCR_8BYTES | DCR_BMS) },
             { DP_RCR, RCR_MON },
@@ -254,8 +256,8 @@ ne_pio_read(ne_t* ne, uchar* buf, int bufsize)
     outb(ne->base + DP_CR, CR_PS_P0 | CR_NO_DMA | CR_STA);
     bnry = inb(ne->base + DP_BNRY);
     page = bnry + 1;
-    if (page == ne->recv_stoppage)
-        page = ne->recv_startpage;
+    if (page == (uint)ne->recv_stoppage)
+        page = (uint)ne->recv_startpage;
 
     if (page == curr) {
         cprintf("%s: no packet to read\n", ne->name);
@@ -269,19 +271,19 @@ ne_pio_read(ne_t* ne, uchar* buf, int bufsize)
         return -1;
     }
 
-    if (buf == 0 || pktsize > bufsize) {
+    if (buf == 0 || pktsize > (uint)bufsize) {
         return pktsize;
     } else {
-        int remain = (ne->recv_stoppage - page) * DP_PAGESIZE;
-        if (remain < pktsize) {
+        int remain = ((uint)ne->recv_stoppage - page) * DP_PAGESIZE;
+        if ((uint)remain < pktsize) {
             ne_getblock(ne, page * DP_PAGESIZE + sizeof(header), remain, buf);
-            ne_getblock(ne, ne->recv_startpage * DP_PAGESIZE, pktsize - remain, buf + remain);
+            ne_getblock(ne, (uint)ne->recv_startpage * DP_PAGESIZE, pktsize - remain, buf + remain);
         } else {
             ne_getblock(ne, page * DP_PAGESIZE + sizeof(header), pktsize, buf);
         }
     }
     bnry = header.next - 1;
-    outb(ne->base + DP_BNRY, bnry < ne->recv_startpage ? ne->recv_stoppage - 1 : bnry);
+    outb(ne->base + DP_BNRY, bnry < (uint)ne->recv_startpage ? (uint)ne->recv_stoppage - 1 : bnry);
     return pktsize;
 }
 
