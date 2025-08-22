@@ -25,6 +25,7 @@ initcode
 initcode.out
 
 # others
+*.tar.gz
 *.txt
 *.lo
 *.la
@@ -39,8 +40,10 @@ initcode.out
 tags
 cscope.*
 *.pyc
+*.tar.gz
 # Build directories
 build*/
+build/
 builds/
 build/
 */CMakeFiles/

@@ -1,21 +1,21 @@
-
 h1. Xv6 with Network
 
-h2. Abstruct
+h2. Abstract
 
-This project will be the implementation of a network in xv6. Supported NIC will be NE2000. This implement referes to MINIX.
+This project aims to implement a network in xv6. The supported NIC will be the NE2000. This implementation refers to MINIX.
 
-These source codes are licenced under the BSD license, which is the same as the licenses of xv6 and MINIX.
+These source codes are licensed under the BSD 3-Clause License. See the LICENSE file for details.
+
 
 h2. Change Log
 
 h3. 20110902
 
-I can get the ethernet address (MAC address) of some known ports.
+I can obtain the Ethernet address (MAC address) of some known ports.
 
 h3. 20110908
 
-Executing "ethtest", I can see sent DHCP/BOOTP packets with 'tcpdump'. But I never see interrupts from NIC, so I will check the driver source.
+Executing "ethtest", I can see DHCP/BOOTP packets being sent with 'tcpdump'. However, I never see interrupts from the NIC, so I will check the driver source.
 
 h4. Environment:
 
@@ -33,35 +33,59 @@ h4. Note:
 
 * The local DHCP server on VirtualBox is located at '10.0.2.2'.
 * The MAC address '52:54:00:12:34:56' is the default address in QEMU, so I use it in BOCHS (see '.bochsrc').
-* BOCHS output an IRQ conflict message but I ignore it now. 
+* BOCHS outputs an IRQ conflict message, but I ignore it for now.
 
 h3. 20110915
 
-I simply rewrite all files under "eth/" to 4 files and implement some TCP/IP protocol stack(Ethernet, IP, UDP, and DHCP), so interrupts occur and an IP address is got by DHCP in -both QEMU and- BOCHS. The IRQ number switches to 10 for IRQ conflicting in BOCHS. '.bochsrc' need to be changed about the ne2k setting.
+I rewrote all files under "eth/" into four files and implemented parts of the TCP/IP protocol stack (Ethernet, IP, UDP, and DHCP), so interrupts occur and an IP address is obtained by DHCP in both QEMU and BOCHS. The IRQ number switches to 10 to avoid IRQ conflicts in BOCHS. '.bochsrc' needs to be changed for the ne2k setting.
 
 h4. Note:
 
-* The implement don't work by building in cygwin(Why...?).
-** Building in linux(Ubuntu) work on qemu in both linux and cygwin.
+* The implementation doesn't work when built in Cygwin (why...?).
+** Building in Linux (Ubuntu) works on QEMU in both Linux and Cygwin.
 * (APPEND) Interrupts don't occur in QEMU...
 
 h4. ToDo:
 
-* Continue to implement driver programs
-* Implement TCP/IP protocol stack.
+* Continue implementing driver programs.
+* Implement the TCP/IP protocol stack.
 ** Need IPC for passing packets to processes by port?
 
 h3. 20110919
 
-* QEMU interrupts problem is solved. In QEMU version 0.14 (after version 0.8?), the IRQ of NE2000 is 11 (but IRQ is conflicted again in BOCHS).
-* I implement 'ioctl' system call.
+* The QEMU interrupts problem is solved. In QEMU version 0.14 (after version 0.8?), the IRQ of the NE2000 is 11 (but the IRQ conflicts again in BOCHS).
+* I implemented the 'ioctl' system call.
+
+
+h2. Network Usage
+
+To build xv6 with network support, simply invoke the usual build followed by a simulator target:
+
+<pre>
+$ make
+$ make qemu   # or 'make bochs'
+</pre>
+
+The Makefile supplies QEMU with an @ne2k_pci@ NIC and the default MAC address @52:54:00:12:34:56@. This device triggers interrupts on IRQ 11 in QEMU 0.14 and later (*see Change Log 20110919*). When using Bochs, enable a NE2000 adapter in @.bochsrc@ and set @irq=10@ to avoid conflicts (*see Change Log 20110915*). The same default MAC address applies to both simulators (*see Change Log 20110908*).
+
+After booting xv6, exercise the driver with the built-in @ethtest@ program to issue DHCP requests:
+
+<pre>
+$ ethtest   # inside xv6
+</pre>
+
+Monitor host-side traffic with tools such as @tcpdump@:
+
+<pre>
+$ sudo tcpdump -n -i <tap-interface>
+</pre>
 
 
 h2. Original README
 
 <pre>
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
-Version 6 (v6).  xv6 loosely follows the structure and style of v6,
+Version 6 (v6). xv6 loosely follows the structure and style of v6,
 but is implemented for a modern x86-based multiprocessor using ANSI C.
 
 ACKNOWLEDGMENTS
@@ -93,22 +117,21 @@ Copyright 2006-2007 Frans Kaashoek, Robert Morris, and Russ Cox.
 ERROR REPORTS
 
 If you spot errors or have suggestions for improvement, please send
-email to Frans Kaashoek and Robert Morris (kaashoek,rtm@csail.mit.edu). 
+email to Frans Kaashoek and Robert Morris (kaashoek,rtm@csail.mit.edu).
 
 BUILDING AND RUNNING XV6
 
 To build xv6 on an x86 ELF machine (like Linux or FreeBSD), run "make".
 On non-x86 or non-ELF machines (like OS X, even on x86), you will
 need to install a cross-compiler gcc suite capable of producing x86 ELF
-binaries.  See http://pdos.csail.mit.edu/6.828/2007/tools.html.
+binaries. See http://pdos.csail.mit.edu/6.828/2007/tools.html.
 Then run "make TOOLPREFIX=i386-jos-elf-".
 
 To run xv6, you can use Bochs or QEMU, both PC simulators.
-Bochs makes debugging easier, but QEMU is much faster. 
+Bochs makes debugging easier, but QEMU is much faster.
 To run in Bochs, run "make bochs" and then type "c" at the bochs prompt.
 To run in QEMU, run "make qemu".
 
-To create a typeset version of the code, run "make xv6.pdf".  This
-requires the "mpage" utility.  See http://www.mesa.nl/pub/mpage/.
+To create a typeset version of the code, run "make xv6.pdf". This
+requires the "mpage" utility. See http://www.mesa.nl/pub/mpage/.
 </pre>
-
