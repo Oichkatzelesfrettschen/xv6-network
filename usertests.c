@@ -13,7 +13,7 @@ int stdout = 1;
 
 // simple file system tests
 
-void
+static void
 opentest(void)
 {
   int fd;
@@ -33,7 +33,7 @@ opentest(void)
   printf(stdout, "open test ok\n");
 }
 
-void
+static void
 writetest(void)
 {
   int fd;
@@ -82,7 +82,7 @@ writetest(void)
   printf(stdout, "small file test ok\n");
 }
 
-void
+static void
 writetest1(void)
 {
   int i, fd, n;
@@ -139,7 +139,7 @@ writetest1(void)
   printf(stdout, "big files ok\n");
 }
 
-void
+static void
 createtest(void)
 {
   int i, fd;
@@ -188,7 +188,7 @@ void dirtest(void)
   printf(stdout, "mkdir test\n");
 }
 
-void
+static void
 exectest(void)
 {
   printf(stdout, "exec test\n");
@@ -200,7 +200,7 @@ exectest(void)
 
 // simple fork and pipe read/write
 
-void
+static void
 pipe1(void)
 {
   int fds[2], pid;
@@ -251,7 +251,7 @@ pipe1(void)
 }
 
 // meant to be run w/ at most two CPUs
-void
+static void
 preempt(void)
 {
   int pid1, pid2, pid3;
@@ -297,7 +297,7 @@ preempt(void)
 }
 
 // try to find any races between exit and wait
-void
+static void
 exitwait(void)
 {
   int i, pid;
@@ -320,7 +320,7 @@ exitwait(void)
   printf(1, "exitwait ok\n");
 }
 
-void
+static void
 mem(void)
 {
   void *m1, *m2;
@@ -357,7 +357,7 @@ mem(void)
 
 // two processes write to the same file descriptor
 // is the offset shared? does inode locking work?
-void
+static void
 sharedfd(void)
 {
   int fd, pid, i, n, nc, np;
@@ -406,7 +406,7 @@ sharedfd(void)
 
 // two processes write two different files at the same
 // time, to test block allocation.
-void
+static void
 twofiles(void)
 {
   int fd, pid, i, j, n, total;
@@ -469,7 +469,7 @@ twofiles(void)
 }
 
 // two processes create and delete different files in same directory
-void
+static void
 createdelete(void)
 {
   enum { N = 20 };
@@ -547,7 +547,7 @@ createdelete(void)
 }
 
 // can I unlink a file and still read it?
-void
+static void
 unlinkread(void)
 {
   int fd, fd1;
@@ -592,7 +592,7 @@ unlinkread(void)
   printf(1, "unlinkread ok\n");
 }
 
-void
+static void
 linktest(void)
 {
   int fd;
@@ -655,7 +655,7 @@ linktest(void)
 }
 
 // test concurrent create and unlink of the same file
-void
+static void
 concreate(void)
 {
   char file[3];
@@ -742,7 +742,7 @@ concreate(void)
 }
 
 // directory that uses indirect blocks
-void
+static void
 bigdir(void)
 {
   int i, fd;
@@ -784,7 +784,7 @@ bigdir(void)
   printf(1, "bigdir ok\n");
 }
 
-void
+static void
 subdir(void)
 {
   int fd, cc;
@@ -967,7 +967,7 @@ subdir(void)
   printf(1, "subdir ok\n");
 }
 
-void
+static void
 bigfile(void)
 {
   int fd, i, total, cc;
@@ -1023,7 +1023,7 @@ bigfile(void)
   printf(1, "bigfile test ok\n");
 }
 
-void
+static void
 fourteen(void)
 {
   int fd;
@@ -1064,7 +1064,7 @@ fourteen(void)
   printf(1, "fourteen ok\n");
 }
 
-void
+static void
 rmdot(void)
 {
   printf(1, "rmdot test\n");
@@ -1103,7 +1103,7 @@ rmdot(void)
   printf(1, "rmdot ok\n");
 }
 
-void
+static void
 dirfile(void)
 {
   int fd;
@@ -1163,7 +1163,7 @@ dirfile(void)
 }
 
 // test that iput() is called at the end of _namei()
-void
+static void
 iref(void)
 {
   int i, fd;
@@ -1199,7 +1199,7 @@ iref(void)
 // test that fork fails gracefully
 // the forktest binary also does this, but it runs out of proc entries first.
 // inside the bigger usertests binary, we run out of memory first.
-void
+static void
 forktest(void)
 {
   int n, pid;
@@ -1234,7 +1234,7 @@ forktest(void)
   printf(1, "fork test OK\n");
 }
 
-void
+static void
 sbrktest(void)
 {
   int fds[2], pid, pids[32], ppid;
@@ -1375,7 +1375,7 @@ sbrktest(void)
   printf(stdout, "sbrk test OK\n");
 }
 
-void
+static void
 validateint(int *p)
 {
   int res;
@@ -1388,7 +1388,7 @@ validateint(int *p)
       "ebx");
 }
 
-void
+static void
 validatetest(void)
 {
   int hi, pid;
@@ -1420,7 +1420,7 @@ validatetest(void)
 
 // does unintialized data start out zero?
 char uninit[10000];
-void
+static void
 bsstest(void)
 {
   int i;
@@ -1437,7 +1437,7 @@ bsstest(void)
 
 // does exec do something sensible if the arguments
 // are larger than a page?
-void
+static void
 bigargtest(void)
 {
   int pid;

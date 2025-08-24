@@ -24,6 +24,12 @@ bootother.out
 initcode
 initcode.out
 
+# IDE and development tools
+compile_commands.json
+
+# Generic binary artifacts
+*.bin
+
 # others
 *.tar.gz
 *.txt

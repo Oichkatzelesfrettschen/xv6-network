@@ -5,6 +5,28 @@ workflow for the educational xv6-network kernel.  It enumerates required tools,
 explains their roles, and shows how to compile the kernel using Ninja as the
 single entry point.
 
+## Quick Start with Bootstrap Script
+
+For a streamlined setup, use the provided bootstrap script which automates toolchain installation, building with IDE support, and testing:
+
+```bash
+# Install toolchains, build with Bear, and run QEMU
+./scripts/bootstrap.sh
+
+# Or run individual steps:
+./scripts/bootstrap.sh --install  # Install required tools
+./scripts/bootstrap.sh --build    # Build with compile_commands.json
+./scripts/bootstrap.sh --run-qemu # Test with QEMU emulator
+```
+
+The bootstrap script generates `compile_commands.json` for IDE integration with Language Server Protocol (LSP) clients like clangd, enabling features such as:
+- Code completion and IntelliSense
+- Go-to-definition and symbol navigation  
+- Real-time error highlighting
+- Automated refactoring support
+
+**IDE Setup**: After running the bootstrap script, your IDE (VS Code, Vim/Neovim with clangd, etc.) will automatically detect the `compile_commands.json` file for enhanced C development experience.
+
 ## 1. Toolchain and Analysis Utilities
 
 Install the complete suite of compilers, linkers, emulators and analysis tools:

@@ -49,9 +49,9 @@ struct backcmd {
   struct cmd *cmd;
 };
 
-int fork1(void);  // Fork but panics on failure.
-void panic(char*);
-struct cmd *parsecmd(char*);
+static int fork1(void);  // Fork but panics on failure.
+static void panic(char*);
+static struct cmd *parsecmd(char*);
 
 static void runcmd(struct cmd *cmd) __attribute__((noreturn));
 
@@ -133,7 +133,7 @@ runcmd(struct cmd *cmd)
   exit();
 }
 
-int
+static int
 getcmd(char *buf, int nbuf)
 {
   printf(2, "$ ");
@@ -175,14 +175,14 @@ main(void)
   exit();
 }
 
-void
+static void
 panic(char *s)
 {
   printf(2, "%s\n", s);
   exit();
 }
 
-int
+static int
 fork1(void)
 {
   int pid;
@@ -195,7 +195,7 @@ fork1(void)
 
 // Constructors
 
-struct cmd*
+static struct cmd*
 execcmd(void)
 {
   struct execcmd *cmd;
@@ -206,7 +206,7 @@ execcmd(void)
   return (struct cmd*)cmd;
 }
 
-struct cmd*
+static struct cmd*
 redircmd(struct cmd *subcmd, char *file, char *efile, int mode, int fd)
 {
   struct redircmd *cmd;
@@ -222,7 +222,7 @@ redircmd(struct cmd *subcmd, char *file, char *efile, int mode, int fd)
   return (struct cmd*)cmd;
 }
 
-struct cmd*
+static struct cmd*
 pipecmd(struct cmd *left, struct cmd *right)
 {
   struct pipecmd *cmd;
@@ -235,7 +235,7 @@ pipecmd(struct cmd *left, struct cmd *right)
   return (struct cmd*)cmd;
 }
 
-struct cmd*
+static struct cmd*
 listcmd(struct cmd *left, struct cmd *right)
 {
   struct listcmd *cmd;
@@ -248,7 +248,7 @@ listcmd(struct cmd *left, struct cmd *right)
   return (struct cmd*)cmd;
 }
 
-struct cmd*
+static struct cmd*
 backcmd(struct cmd *subcmd)
 {
   struct backcmd *cmd;
@@ -264,7 +264,7 @@ backcmd(struct cmd *subcmd)
 char whitespace[] = " \t\r\n\v";
 char symbols[] = "<|>&;()";
 
-int
+static int
 gettoken(char **ps, char *es, char **q, char **eq)
 {
   char *s;
@@ -309,7 +309,7 @@ gettoken(char **ps, char *es, char **q, char **eq)
   return ret;
 }
 
-int
+static int
 peek(char **ps, char *es, char *toks)
 {
   char *s;
@@ -321,12 +321,12 @@ peek(char **ps, char *es, char *toks)
   return *s && strchr(toks, *s);
 }
 
-struct cmd *parseline(char**, char*);
-struct cmd *parsepipe(char**, char*);
-struct cmd *parseexec(char**, char*);
-struct cmd *nulterminate(struct cmd*);
+static struct cmd *parseline(char**, char*);
+static struct cmd *parsepipe(char**, char*);
+static struct cmd *parseexec(char**, char*);
+static struct cmd *nulterminate(struct cmd*);
 
-struct cmd*
+static struct cmd*
 parsecmd(char *s)
 {
   char *es;
@@ -343,7 +343,7 @@ parsecmd(char *s)
   return cmd;
 }
 
-struct cmd*
+static struct cmd*
 parseline(char **ps, char *es)
 {
   struct cmd *cmd;
@@ -360,7 +360,7 @@ parseline(char **ps, char *es)
   return cmd;
 }
 
-struct cmd*
+static struct cmd*
 parsepipe(char **ps, char *es)
 {
   struct cmd *cmd;
@@ -373,7 +373,7 @@ parsepipe(char **ps, char *es)
   return cmd;
 }
 
-struct cmd*
+static struct cmd*
 parseredirs(struct cmd *cmd, char **ps, char *es)
 {
   int tok;
@@ -398,7 +398,7 @@ parseredirs(struct cmd *cmd, char **ps, char *es)
   return cmd;
 }
 
-struct cmd*
+static struct cmd*
 parseblock(char **ps, char *es)
 {
   struct cmd *cmd;
@@ -414,7 +414,7 @@ parseblock(char **ps, char *es)
   return cmd;
 }
 
-struct cmd*
+static struct cmd*
 parseexec(char **ps, char *es)
 {
   char *q, *eq;
@@ -448,7 +448,7 @@ parseexec(char **ps, char *es)
 }
 
 // NUL-terminate all the counted strings.
-struct cmd*
+static struct cmd*
 nulterminate(struct cmd *cmd)
 {
   int i;
